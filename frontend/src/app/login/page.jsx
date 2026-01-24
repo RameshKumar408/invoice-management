@@ -10,21 +10,26 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { FadeIn, SlideIn, FormFieldAnimation, AnimatedButton, LoadingSpinner } from '@/components/animations';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+    DialogClose,
+} from '@/components/ui/dialog';
 
 export default function LoginPage() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [justLoggedIn, setJustLoggedIn] = useState(false);
+    const [showBillingPrompt, setShowBillingPrompt] = useState(false);
     const { login, user, loading: authLoading } = useAuth();
     const router = useRouter();
 
-    // Redirect if already logged in
-    useEffect(() => {
-        if (user && !authLoading) {
-            router.push('/dashboard');
-        }
-    }, [user, authLoading, router]);
 
     // Show loading while checking authentication
     if (authLoading) {
@@ -38,8 +43,8 @@ export default function LoginPage() {
         );
     }
 
-    // Don't render login form if user is already logged in
-    if (user) {
+    // If there's an existing logged-in user (not from this login flow), don't render the login form
+    if (user && !justLoggedIn) {
         return null;
     }
 
@@ -50,10 +55,23 @@ export default function LoginPage() {
 
         try {
             await login({ email, password });
+            // Mark that user just logged in via this form and show prompt
+            setJustLoggedIn(true);
+            setShowBillingPrompt(true);
         } catch (err) {
-            setError(err.message);
+            setError(err.message || 'Login failed');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleBillingChoice = (startBilling) => {
+        setShowBillingPrompt(false);
+        setJustLoggedIn(false);
+        if (startBilling) {
+            router.push('/transactions/sale');
+        } else {
+            router.push('/dashboard');
         }
     };
 
@@ -141,6 +159,32 @@ export default function LoginPage() {
                     </Card>
                 </SlideIn>
             </FadeIn>
+
+            {/* Billing Prompt Dialog */}
+            <Dialog open={showBillingPrompt} onOpenChange={setShowBillingPrompt}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Start Billing?</DialogTitle>
+                        <DialogDescription>
+                            Do you want to start billing now?
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button
+                            onClick={() => handleBillingChoice(false)}
+                            className="mr-2"
+                        >
+                            No
+                        </Button>
+                        <Button
+                            onClick={() => handleBillingChoice(true)}
+                        >
+                            Yes
+                        </Button>
+                    </DialogFooter>
+                    <DialogClose onClick={() => handleBillingChoice(false)} />
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
