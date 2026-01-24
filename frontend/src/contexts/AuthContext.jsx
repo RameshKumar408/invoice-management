@@ -47,7 +47,7 @@ export function AuthProvider({ children }) {
 
             if (response.success && response.data) {
                 setUser(response.data.user);
-                router.push('/dashboard');
+                // router.push('/dashboard');
             } else {
                 throw new Error(response.message || 'Login failed');
             }

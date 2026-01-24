@@ -189,7 +189,7 @@ export default function AddSalePage() {
                             </Button>
                         </ScaleOnHover>
                         <div>
-                            <h1 className="text-3xl font-bold tracking-tight">Add Sale Transaction</h1>
+                            <h1 className="text-3xl font-bold tracking-tight">Invoice</h1>
                             <p className="text-muted-foreground">
                                 Record a new sale transaction for your customers
                             </p>
