@@ -91,6 +91,8 @@ export default function ProductsPage() {
                                             <TableHead>Price</TableHead>
                                             <TableHead>Stock</TableHead>
                                             <TableHead>HSN</TableHead>
+                                            <TableHead>CGST</TableHead>
+                                            <TableHead>SGST</TableHead>
                                             <TableHead>Status</TableHead>
                                             <TableHead>Actions</TableHead>
                                         </TableRow>
@@ -117,6 +119,8 @@ export default function ProductsPage() {
                                                     </div>
                                                 </TableCell>
                                                 <TableCell>{product.HSN}</TableCell>
+                                                <TableCell>{product.cgst}%</TableCell>
+                                                <TableCell>{product.sgst}%</TableCell>
                                                 <TableCell>
                                                     {product.stock <= product.minStockLevel ? (
                                                         <Badge variant="destructive">Low Stock</Badge>

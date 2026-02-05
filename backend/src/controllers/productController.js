@@ -129,22 +129,22 @@ const updateProduct = asyncHandler(async (req, res) => {
   const { id } = req.params;
   const updateData = req.body;
 
-  // Check if HSN already exists (if being updated)
-  if (updateData.HSN) {
-    const existingProduct = await Product.findOne({
-      HSN: updateData.HSN,
-      businessId: req.businessId,
-      _id: { $ne: id },
-      isActive: true
-    });
+  // // Check if HSN already exists (if being updated)
+  // if (updateData.HSN) {
+  //   const existingProduct = await Product.findOne({
+  //     HSN: updateData.HSN,
+  //     businessId: req.businessId,
+  //     _id: { $ne: id },
+  //     isActive: true
+  //   });
 
-    if (existingProduct) {
-      return res.status(400).json({
-        success: false,
-        message: 'Product with this HSN already exists'
-      });
-    }
-  }
+  //   if (existingProduct) {
+  //     return res.status(400).json({
+  //       success: false,
+  //       message: 'Product with this HSN already exists'
+  //     });
+  //   }
+  // }
 
   const product = await Product.findOneAndUpdate(
     { _id: id, businessId: req.businessId },

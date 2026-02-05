@@ -115,20 +115,7 @@ export default function TransactionsPage() {
                             Manage your sales and purchase transactions
                         </p>
                     </div>
-                    <div className="flex gap-2">
-                        <Button asChild>
-                            <Link href="/transactions/sale">
-                                <Plus className="mr-2 h-4 w-4" />
-                                Add Sale
-                            </Link>
-                        </Button>
-                        <Button variant="outline" asChild>
-                            <Link href="/transactions/purchase">
-                                <Plus className="mr-2 h-4 w-4" />
-                                Add Purchase
-                            </Link>
-                        </Button>
-                    </div>
+
                 </div>
 
                 {error && (

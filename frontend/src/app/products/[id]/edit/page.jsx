@@ -25,6 +25,8 @@ const productSchema = z.object({
     stock: z.coerce.number().int().gt(0, 'Stock quantity must be greater than 0'),
     minStockLevel: z.coerce.number().int().gt(0, 'Minimum stock level must be greater than 0').optional(),
     HSN: z.string().min(2, 'HSN must be at least 2 characters'),
+    cgst: z.coerce.number().min(0, 'CGST must be at least 0').default(0),
+    sgst: z.coerce.number().min(0, 'SGST must be at least 0').default(0),
 });
 
 export default function EditProductPage() {
@@ -45,6 +47,8 @@ export default function EditProductPage() {
             stock: 0,
             minStockLevel: 0,
             HSN: '',
+            cgst: 0,
+            sgst: 0,
         },
     });
 
@@ -67,6 +71,8 @@ export default function EditProductPage() {
                     stock: productData.stock || 0,
                     minStockLevel: productData.minStockLevel || 0,
                     HSN: productData.HSN || '',
+                    cgst: productData.cgst || 0,
+                    sgst: productData.sgst || 0,
                 });
             } else {
                 setError('Failed to load product');
@@ -229,6 +235,36 @@ export default function EditProductPage() {
                                                     <FormLabel>Min Stock Level</FormLabel>
                                                     <FormControl>
                                                         <Input type="number" min="0" {...field} />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+                                    </div>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <FormField
+                                            control={form.control}
+                                            name="cgst"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>CGST (%)</FormLabel>
+                                                    <FormControl>
+                                                        <Input type="number" step="0.01" min="0" {...field} />
+                                                    </FormControl>
+                                                    <FormMessage />
+                                                </FormItem>
+                                            )}
+                                        />
+
+                                        <FormField
+                                            control={form.control}
+                                            name="sgst"
+                                            render={({ field }) => (
+                                                <FormItem>
+                                                    <FormLabel>SGST (%)</FormLabel>
+                                                    <FormControl>
+                                                        <Input type="number" step="0.01" min="0" {...field} />
                                                     </FormControl>
                                                     <FormMessage />
                                                 </FormItem>

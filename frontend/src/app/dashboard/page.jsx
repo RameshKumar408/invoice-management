@@ -3,9 +3,11 @@
 import { useEffect, useState } from 'react';
 import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { Layout } from '@/components/Layout';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { apiClient } from '@/lib/api';
-import { Package, Users, Receipt, TrendingUp, AlertTriangle, DollarSign } from 'lucide-react';
+import { Package, Users, Receipt, TrendingUp, AlertTriangle, DollarSign, Plus } from 'lucide-react';
 
 export default function DashboardPage() {
     const [summary, setSummary] = useState(null);
@@ -47,6 +49,22 @@ export default function DashboardPage() {
                     <div>
                         <h1 className="text-3xl font-bold">Dashboard</h1>
                         <p className="text-muted-foreground">Welcome to your inventory management system</p>
+
+
+                    </div>
+                    <div className="flex gap-2">
+                        <Button asChild>
+                            <Link href="/transactions/sale">
+                                <Plus className="mr-2 h-4 w-4" />
+                                Add Sale
+                            </Link>
+                        </Button>
+                        <Button variant="outline" asChild>
+                            <Link href="/transactions/purchase">
+                                <Plus className="mr-2 h-4 w-4" />
+                                Add Purchase
+                            </Link>
+                        </Button>
                     </div>
 
                     {/* Overview Cards */}

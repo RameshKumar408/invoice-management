@@ -47,6 +47,16 @@ const productSchema = new mongoose.Schema({
     type: Number,
     default: 0,
     min: [0, 'Minimum stock level cannot be negative']
+  },
+  cgst: {
+    type: Number,
+    default: 0,
+    min: [0, 'CGST cannot be negative']
+  },
+  sgst: {
+    type: Number,
+    default: 0,
+    min: [0, 'SGST cannot be negative']
   }
 }, {
   timestamps: true

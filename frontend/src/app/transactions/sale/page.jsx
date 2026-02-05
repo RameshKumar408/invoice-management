@@ -49,6 +49,7 @@ const saleFormSchema = z.object({
         productId: z.string().min(1, 'Product is required'),
         quantity: z.number().min(1, 'Quantity must be at least 1'),
         price: z.number().min(0, 'Price must be positive'),
+        incPrice: z.number().min(0, 'Inc. Price must be positive').optional(),
         unitType: z.enum(['case', 'single']),
     })).min(1, 'At least one product is required'),
     discount: z.number().min(0, 'Discount must be positive').optional(),
@@ -70,7 +71,7 @@ export default function AddSalePage() {
             customerId: '',
             paymentMethod: 'cash',
             notes: '',
-            products: [{ productId: '', quantity: 1, price: 0, unitType: 'case' }],
+            products: [{ productId: '', quantity: 1, price: 0, incPrice: 0, unitType: 'case' }],
             discount: 0,
         },
     });
@@ -109,7 +110,46 @@ export default function AddSalePage() {
     const handleProductChange = (index, productId) => {
         const selectedProduct = products.find(p => p._id === productId);
         if (selectedProduct) {
-            form.setValue(`products.${index}.price`, selectedProduct.price);
+            const price = selectedProduct.price || 0;
+            const cgst = selectedProduct.cgst || 0;
+            const sgst = selectedProduct.sgst || 0;
+            const totalTaxRate = cgst + sgst;
+            const incPrice = price * (1 + totalTaxRate / 100);
+
+            form.setValue(`products.${index}.price`, Number(price.toFixed(2)));
+            form.setValue(`products.${index}.incPrice`, Number(incPrice.toFixed(2)));
+        }
+    };
+
+    // Handle Inclusive Price change
+    const onIncPriceChange = (index, incPrice) => {
+        const productId = form.getValues(`products.${index}.productId`);
+        const selectedProduct = products.find(p => p._id === productId);
+
+        if (selectedProduct) {
+            const cgst = selectedProduct.cgst || 0;
+            const sgst = selectedProduct.sgst || 0;
+            const totalTaxRate = cgst + sgst;
+            const basePrice = incPrice / (1 + totalTaxRate / 100);
+
+            form.setValue(`products.${index}.price`, Number(basePrice.toFixed(2)));
+        } else {
+            form.setValue(`products.${index}.price`, incPrice);
+        }
+    };
+
+    // Handle Base Price change
+    const onPriceChange = (index, price) => {
+        const productId = form.getValues(`products.${index}.productId`);
+        const selectedProduct = products.find(p => p._id === productId);
+
+        if (selectedProduct) {
+            const cgst = selectedProduct.cgst || 0;
+            const sgst = selectedProduct.sgst || 0;
+            const totalTaxRate = cgst + sgst;
+            const incPrice = price * (1 + totalTaxRate / 100);
+
+            form.setValue(`products.${index}.incPrice`, Number(incPrice.toFixed(2)));
         }
     };
 
@@ -118,19 +158,49 @@ export default function AddSalePage() {
         const watchedProducts = form.watch('products');
         const discountAmount = form.watch('discount') || 0;
 
-        const subtotal = watchedProducts.reduce((total, product) => {
-            return total + (product.quantity * product.price);
-        }, 0);
+        let subtotal = 0;
+        let totalCgst = 0;
+        let totalSgst = 0;
 
-        // Calculate discount base amount (removing 5% tax component)
-        const baseDiscount = discountAmount * (100 / 105);
-        const taxableAmount = Math.max(0, subtotal - baseDiscount);
+        // Calculate initial subtotal
+        watchedProducts.forEach(p => {
+            subtotal += (p.quantity * (p.price || 0));
+        });
 
-        const sgst = taxableAmount * 0.025;
-        const cgst = taxableAmount * 0.025;
-        const total = taxableAmount + sgst + cgst;
+        // Split discount across products to calculate tax on discounted value
+        // We assume 5% average tax for the baseDiscount calculation if we need it
+        // but it's better to just calculate tax on (price - proportionate discount)
+        const totalBaseDiscount = discountAmount > 0 ? discountAmount / 1.05 : 0; // fallback for tax removal
 
-        return { subtotal, sgst, cgst, total, baseDiscount, discountAmount };
+        watchedProducts.forEach(p => {
+            const product = products.find(prod => prod._id === p.productId);
+            const itemPrice = p.price || 0;
+            const itemQty = p.quantity || 0;
+            const itemTotal = itemPrice * itemQty;
+
+            const cgstRate = product?.cgst || 0;
+            const sgstRate = product?.sgst || 0;
+
+            // Simple approach: Tax on item total, then remove discount portion later?
+            // BETTER: Tax is calculated on discounted taxable value.
+            const itemRatio = subtotal > 0 ? itemTotal / subtotal : 0;
+            const itemDiscount = totalBaseDiscount * itemRatio;
+            const taxableAmount = Math.max(0, itemTotal - itemDiscount);
+
+            totalCgst += taxableAmount * (cgstRate / 100);
+            totalSgst += taxableAmount * (sgstRate / 100);
+        });
+
+        const total = subtotal - totalBaseDiscount + totalCgst + totalSgst;
+
+        return {
+            subtotal,
+            sgst: totalSgst,
+            cgst: totalCgst,
+            total,
+            baseDiscount: totalBaseDiscount,
+            discountAmount
+        };
     };
 
     const onSubmit = (data) => {
@@ -220,14 +290,27 @@ export default function AddSalePage() {
                         {/* Customer & Payment Info */}
                         <SlideIn direction="up" delay={0.2}>
                             <Card>
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2">
-                                        <User className="h-5 w-5" />
-                                        Customer & Payment Information
-                                    </CardTitle>
-                                    <CardDescription>
-                                        Select the customer and payment details
-                                    </CardDescription>
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                                    <div className="space-y-1.5">
+                                        <CardTitle className="flex items-center gap-2">
+                                            <User className="h-5 w-5" />
+                                            Customer & Payment Information
+                                        </CardTitle>
+                                        <CardDescription>
+                                            Select the customer and payment details
+                                        </CardDescription>
+                                    </div>
+                                    <ScaleOnHover>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => router.push('/contacts/new')}
+                                        >
+                                            <Plus className="mr-2 h-4 w-4" />
+                                            Add Customer
+                                        </Button>
+                                    </ScaleOnHover>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                     <div className="grid gap-6 md:grid-cols-2">
@@ -328,7 +411,7 @@ export default function AddSalePage() {
                                                 type="button"
                                                 variant="outline"
                                                 size="sm"
-                                                onClick={() => append({ productId: '', quantity: 1, price: 0, unitType: 'case' })}
+                                                onClick={() => append({ productId: '', quantity: 1, price: 0, incPrice: 0, unitType: 'case' })}
                                             >
                                                 <Plus className="mr-2 h-4 w-4" />
                                                 Add Product
@@ -346,7 +429,7 @@ export default function AddSalePage() {
                                         );
 
                                         return (
-                                            <div key={field.id} className="grid gap-4 md:grid-cols-6 items-end p-4 border rounded-lg relative group transition-all duration-300 hover:shadow-md">
+                                            <div key={field.id} className="grid gap-4 md:grid-cols-8 items-end p-4 border rounded-lg relative group transition-all duration-300 hover:shadow-md">
                                                 <FormField
                                                     control={form.control}
                                                     name={`products.${index}.productId`}
@@ -421,6 +504,31 @@ export default function AddSalePage() {
 
                                                 <FormField
                                                     control={form.control}
+                                                    name={`products.${index}.incPrice`}
+                                                    render={({ field }) => (
+                                                        <FormItem>
+                                                            <FormLabel>Inc. Price</FormLabel>
+                                                            <FormControl>
+                                                                <Input
+                                                                    type="number"
+                                                                    step="0.01"
+                                                                    min="0"
+                                                                    {...field}
+                                                                    onChange={(e) => {
+                                                                        const val = Number(e.target.value);
+                                                                        field.onChange(val);
+                                                                        onIncPriceChange(index, val);
+                                                                    }}
+                                                                    className="transition-all duration-300 focus:scale-105"
+                                                                />
+                                                            </FormControl>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
+
+                                                <FormField
+                                                    control={form.control}
                                                     name={`products.${index}.price`}
                                                     render={({ field }) => (
                                                         <FormItem>
@@ -431,7 +539,11 @@ export default function AddSalePage() {
                                                                     step="0.01"
                                                                     min="0"
                                                                     {...field}
-                                                                    onChange={(e) => field.onChange(Number(e.target.value))}
+                                                                    onChange={(e) => {
+                                                                        const val = Number(e.target.value);
+                                                                        field.onChange(val);
+                                                                        onPriceChange(index, val);
+                                                                    }}
                                                                     className="transition-all duration-300 focus:scale-105"
                                                                 />
                                                             </FormControl>
@@ -490,11 +602,11 @@ export default function AddSalePage() {
                                             <span>RS {calculateAmounts().subtotal.toFixed(2)}</span>
                                         </div>
                                         <div className="flex justify-between items-center text-muted-foreground">
-                                            <span>SGST (2.5%):</span>
+                                            <span>SGST:</span>
                                             <span>RS {calculateAmounts().sgst.toFixed(2)}</span>
                                         </div>
                                         <div className="flex justify-between items-center text-muted-foreground">
-                                            <span>CGST (2.5%):</span>
+                                            <span>CGST:</span>
                                             <span>RS {calculateAmounts().cgst.toFixed(2)}</span>
                                         </div>
 
