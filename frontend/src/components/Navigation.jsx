@@ -33,7 +33,7 @@ const navigation = [
     { name: 'Products', href: '/products', icon: Package },
     { name: 'Contacts', href: '/contacts', icon: Users },
     { name: 'Transactions', href: '/transactions', icon: Receipt },
-    { name: 'Reports', href: '/reports', icon: BarChart3 },
+    // { name: 'Reports', href: '/reports', icon: BarChart3 },
 ];
 
 export function Navigation() {

@@ -9,7 +9,7 @@ export const Invoice = React.forwardRef(({ transaction, businessDetails }, ref) 
 
     // Helper to format currency
     const formatCurrency = (amount) => {
-        return (amount || 0).toFixed(2);
+        return Number(amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     };
 
     // Number to words helper (simplified for Indian context)
@@ -74,7 +74,7 @@ export const Invoice = React.forwardRef(({ transaction, businessDetails }, ref) 
                     </div>
                     <div className="grid grid-cols-2 border-b-2 border-black min-h-[20px]">
                         <div className="border-r-2 border-black p-0.5 text-center text-[7pt]">
-                            {new Date(transaction.date).toLocaleDateString()}
+                            {new Date(transaction.date).toLocaleDateString('en-GB')}
                         </div>
                         <div className="p-0.5 text-center text-[7pt] font-bold">
                             {transaction.invoiceNumber || transaction._id.slice(-6).toUpperCase()}
@@ -155,9 +155,13 @@ export const Invoice = React.forwardRef(({ transaction, businessDetails }, ref) 
                         <div className="border-r-2 border-black p-0.5 pl-2">CGST (2.5%)</div>
                         <div className="p-0.5 text-right">{formatCurrency(transaction.cgst)}</div>
                     </div>
+                    <div className="grid grid-cols-2 border-b border-black bg-blue-50/20 font-bold">
+                        <div className="border-r-2 border-black p-0.5 pl-2">Original Amount</div>
+                        <div className="p-0.5 text-right font-bold">{formatCurrency((transaction.totalAmount || 0) + (transaction.discount || 0))}</div>
+                    </div>
                     {transaction.discount > 0 && (
-                        <div className="grid grid-cols-2 border-b border-black text-green-700">
-                            <div className="border-r-2 border-black p-0.5 pl-2">Discount</div>
+                        <div className="grid grid-cols-2 border-b border-black text-green-800">
+                            <div className="border-r-2 border-black p-0.5 pl-2">Discount Amount (-)</div>
                             <div className="p-0.5 text-right">-{formatCurrency(transaction.discount)}</div>
                         </div>
                     )}

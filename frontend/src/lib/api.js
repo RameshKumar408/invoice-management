@@ -197,6 +197,11 @@ class ApiClient {
         return response.data;
     }
 
+    async addTransactionPayment(id, data) {
+        const response = await this.instance.post(`/transactions/${id}/payments`, data);
+        return response.data;
+    }
+
     // Report methods
     async getDashboard() {
         const response = await this.instance.get('/reports/dashboard');

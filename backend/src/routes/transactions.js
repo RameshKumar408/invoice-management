@@ -6,7 +6,8 @@ const {
   getSales,
   getPurchases,
   updateTransactionStatus,
-  getTransactionSummary
+  getTransactionSummary,
+  addPayment
 } = require('../controllers/transactionController');
 const { authenticate, checkBusinessAccess } = require('../middleware/auth');
 const { validateRequest } = require('../middleware/validation');
@@ -33,5 +34,6 @@ router.get('/purchases', getPurchases);
 // Individual transaction routes
 router.get('/:id', getTransaction);
 router.patch('/:id/status', updateTransactionStatusValidation, validateRequest, updateTransactionStatus);
+router.post('/:id/payments', addPayment);
 
 module.exports = router;

@@ -162,43 +162,30 @@ export default function AddSalePage() {
         let totalCgst = 0;
         let totalSgst = 0;
 
-        // Calculate initial subtotal
-        watchedProducts.forEach(p => {
-            subtotal += (p.quantity * (p.price || 0));
-        });
-
-        // Split discount across products to calculate tax on discounted value
-        // We assume 5% average tax for the baseDiscount calculation if we need it
-        // but it's better to just calculate tax on (price - proportionate discount)
-        const totalBaseDiscount = discountAmount > 0 ? discountAmount / 1.05 : 0; // fallback for tax removal
-
         watchedProducts.forEach(p => {
             const product = products.find(prod => prod._id === p.productId);
             const itemPrice = p.price || 0;
             const itemQty = p.quantity || 0;
             const itemTotal = itemPrice * itemQty;
 
+            subtotal += itemTotal;
+
             const cgstRate = product?.cgst || 0;
             const sgstRate = product?.sgst || 0;
 
-            // Simple approach: Tax on item total, then remove discount portion later?
-            // BETTER: Tax is calculated on discounted taxable value.
-            const itemRatio = subtotal > 0 ? itemTotal / subtotal : 0;
-            const itemDiscount = totalBaseDiscount * itemRatio;
-            const taxableAmount = Math.max(0, itemTotal - itemDiscount);
-
-            totalCgst += taxableAmount * (cgstRate / 100);
-            totalSgst += taxableAmount * (sgstRate / 100);
+            totalCgst += itemTotal * (cgstRate / 100);
+            totalSgst += itemTotal * (sgstRate / 100);
         });
 
-        const total = subtotal - totalBaseDiscount + totalCgst + totalSgst;
+        const originalAmount = subtotal + totalCgst + totalSgst;
+        const total = originalAmount - discountAmount;
 
         return {
             subtotal,
             sgst: totalSgst,
             cgst: totalCgst,
-            total,
-            baseDiscount: totalBaseDiscount,
+            originalAmount,
+            total: Math.max(0, total),
             discountAmount
         };
     };
@@ -406,17 +393,7 @@ export default function AddSalePage() {
                                             <ShoppingCart className="h-5 w-5" />
                                             <span>Products</span>
                                         </div>
-                                        <ScaleOnHover>
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => append({ productId: '', quantity: 1, price: 0, incPrice: 0, unitType: 'case' })}
-                                            >
-                                                <Plus className="mr-2 h-4 w-4" />
-                                                Add Product
-                                            </Button>
-                                        </ScaleOnHover>
+
                                     </CardTitle>
                                     <CardDescription>
                                         Add products to this sale transaction
@@ -555,7 +532,7 @@ export default function AddSalePage() {
                                                 <div className="space-y-2">
                                                     <Label>Total</Label>
                                                     <div className="h-10 flex items-center px-3 py-2 border rounded-md bg-muted font-medium">
-                                                        RS {(form.watch(`products.${index}.quantity`) * form.watch(`products.${index}.price`)).toFixed(2)}
+                                                        RS {Number(form.watch(`products.${index}.quantity`) * form.watch(`products.${index}.price`)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                     </div>
                                                 </div>
 
@@ -595,25 +572,44 @@ export default function AddSalePage() {
                                             </FadeIn>
                                         )}
 
+                                    <div className="flex justify-end">
+                                        <ScaleOnHover>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => append({ productId: '', quantity: 1, price: 0, incPrice: 0, unitType: 'case' })}
+                                            >
+                                                <Plus className="mr-2 h-4 w-4" />
+                                                Add Product
+                                            </Button>
+                                        </ScaleOnHover>
+                                    </div>
+
                                     {/* Total Amount Section */}
                                     <div className="border-t pt-4 space-y-2">
                                         <div className="flex justify-between items-center text-muted-foreground">
                                             <span>Subtotal:</span>
-                                            <span>RS {calculateAmounts().subtotal.toFixed(2)}</span>
+                                            <span>RS {Number(calculateAmounts().subtotal).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                         </div>
                                         <div className="flex justify-between items-center text-muted-foreground">
                                             <span>SGST:</span>
-                                            <span>RS {calculateAmounts().sgst.toFixed(2)}</span>
+                                            <span>RS {Number(calculateAmounts().sgst).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                         </div>
                                         <div className="flex justify-between items-center text-muted-foreground">
                                             <span>CGST:</span>
-                                            <span>RS {calculateAmounts().cgst.toFixed(2)}</span>
+                                            <span>RS {Number(calculateAmounts().cgst).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                        </div>
+
+                                        <div className="flex justify-between items-center py-2 border-t border-dashed">
+                                            <span className="font-medium text-blue-600">Original Amount:</span>
+                                            <span className="font-bold text-blue-600">RS {Number(calculateAmounts().originalAmount).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                         </div>
 
                                         {/* Discount Input Field */}
-                                        <div className="flex justify-between items-center py-2 border-y border-dashed">
+                                        <div className="flex justify-between items-center py-2 border-y border-dashed bg-slate-50/50 px-2 rounded">
                                             <div className="flex items-center gap-2">
-                                                <span className="font-medium">Discount Amount:</span>
+                                                <span className="font-medium">Discount Amount (-):</span>
                                             </div>
                                             <div className="w-32">
                                                 <FormField
@@ -628,7 +624,7 @@ export default function AddSalePage() {
                                                                     min="0"
                                                                     {...field}
                                                                     onChange={(e) => field.onChange(Number(e.target.value))}
-                                                                    className="text-right h-9 transition-all duration-300 focus:ring-2 focus:ring-primary/50"
+                                                                    className="text-right h-9 transition-all duration-300 focus:ring-2 focus:ring-primary/50 bg-white"
                                                                     placeholder="0.00"
                                                                 />
                                                             </FormControl>
@@ -640,9 +636,9 @@ export default function AddSalePage() {
                                         </div>
 
                                         <div className="flex justify-between items-center pt-2 border-t">
-                                            <span className="text-lg font-bold">Total Amount:</span>
+                                            <span className="text-lg font-bold">Total Amount (Payable):</span>
                                             <span className="text-3xl font-bold text-green-600">
-                                                RS {calculateAmounts().total.toFixed(2)}
+                                                RS {Number(calculateAmounts().total).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                             </span>
                                         </div>
                                     </div>

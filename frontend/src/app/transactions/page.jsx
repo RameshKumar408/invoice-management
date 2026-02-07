@@ -61,6 +61,41 @@ export default function TransactionsPage() {
         }
     };
 
+    const setQuickDate = (range) => {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        let start = new Date(today);
+        let end = new Date(today);
+
+        switch (range) {
+            case 'today':
+                break;
+            case 'yesterday':
+                start.setDate(today.getDate() - 1);
+                end.setDate(today.getDate() - 1);
+                break;
+            case 'week':
+                start.setDate(today.getDate() - 7);
+                break;
+            case 'month':
+                start.setDate(today.getDate() - 31);
+                break;
+            default:
+                break;
+        }
+
+        const formatDate = (date) => {
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        };
+
+        setStartDate(formatDate(start));
+        setEndDate(formatDate(end));
+        setPage(1);
+    };
+
     const fetchSummary = async () => {
         try {
             const params = {};
@@ -110,7 +145,7 @@ export default function TransactionsPage() {
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
-                        <h1 className="text-2xl font-bold tracking-tight">Transactions</h1>
+                        <h1 className="text-2xl font-bold tracking-tight">P&L Balance Sheet</h1>
                         <p className="text-muted-foreground">
                             Manage your sales and purchase transactions
                         </p>
@@ -126,64 +161,61 @@ export default function TransactionsPage() {
 
                 {/* Summary Cards */}
                 {summary && (
-                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                        <Card>
+                    <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-green-500 shadow-sm">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Total Sales</CardTitle>
-                                <TrendingUp className="h-4 w-4 text-green-500" />
+                                <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Total Sales</CardTitle>
+                                <div className="p-2 bg-green-50 rounded-full">
+                                    <TrendingUp className="h-5 w-5 text-green-600" />
+                                </div>
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold text-green-500">
-                                    ₹{summary.sales.totalAmount.toLocaleString()}
+                                <div className="text-3xl font-black text-green-600">
+                                    RS {Number(summary.sales.totalAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </div>
-                                <p className="text-xs text-muted-foreground">
-                                    {summary.sales.transactionCount} transactions
-                                </p>
+                                <div className="flex items-center gap-2 mt-1">
+                                    <Badge variant="outline" className="text-[10px] font-bold bg-green-50 text-green-700 border-green-200">
+                                        {summary.sales.transactionCount} Orders
+                                    </Badge>
+                                </div>
                             </CardContent>
                         </Card>
 
-                        <Card>
+                        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-red-500 shadow-sm">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Total Purchases</CardTitle>
-                                <TrendingDown className="h-4 w-4 text-red-500" />
+                                <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Total Purchases</CardTitle>
+                                <div className="p-2 bg-red-50 rounded-full">
+                                    <TrendingDown className="h-5 w-5 text-red-600" />
+                                </div>
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold text-red-500">
-                                    ₹{summary.purchases.totalAmount.toLocaleString()}
+                                <div className="text-3xl font-black text-red-600">
+                                    RS {Number(summary.purchases.totalAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </div>
-                                <p className="text-xs text-muted-foreground">
-                                    {summary.purchases.transactionCount} transactions
-                                </p>
+                                <div className="flex items-center gap-2 mt-1">
+                                    <Badge variant="outline" className="text-[10px] font-bold bg-red-50 text-red-700 border-red-200">
+                                        {summary.purchases.transactionCount} Orders
+                                    </Badge>
+                                </div>
                             </CardContent>
                         </Card>
 
-                        <Card>
+                        <Card className={`hover:shadow-lg transition-all duration-300 border-l-4 shadow-sm ${summary.profitLoss >= 0 ? 'border-l-blue-500' : 'border-l-orange-500'}`}>
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Profit/Loss</CardTitle>
-                                <DollarSign className={`h-4 w-4 ${summary.profitLoss >= 0 ? 'text-green-500' : 'text-red-500'}`} />
+                                <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Net Profit/Loss</CardTitle>
+                                <div className={`p-2 rounded-full ${summary.profitLoss >= 0 ? 'bg-blue-50' : 'bg-orange-50'}`}>
+                                    <DollarSign className={`h-5 w-5 ${summary.profitLoss >= 0 ? 'text-blue-600' : 'text-orange-600'}`} />
+                                </div>
                             </CardHeader>
                             <CardContent>
-                                <div className={`text-2xl font-bold ${summary.profitLoss >= 0 ? 'text-green-500' : 'text-red-500'}`}>
-                                    ₹{summary.profitLoss.toLocaleString()}
+                                <div className={`text-3xl font-black ${summary.profitLoss >= 0 ? 'text-blue-600' : 'text-orange-600'}`}>
+                                    RS {Number(summary.profitLoss || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </div>
-                                <p className="text-xs text-muted-foreground">
-                                    {summary.profitLoss >= 0 ? 'Profit' : 'Loss'}
-                                </p>
-                            </CardContent>
-                        </Card>
-
-                        <Card>
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-sm font-medium">Avg Sale Amount</CardTitle>
-                                <ArrowUpDown className="h-4 w-4 text-blue-500" />
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold text-blue-500">
-                                    ₹{summary.sales.averageAmount.toLocaleString()}
+                                <div className="flex items-center gap-2 mt-1">
+                                    <span className="text-xs font-medium text-muted-foreground">
+                                        Overall Performance
+                                    </span>
                                 </div>
-                                <p className="text-xs text-muted-foreground">
-                                    Per transaction
-                                </p>
                             </CardContent>
                         </Card>
                     </div>
@@ -191,11 +223,59 @@ export default function TransactionsPage() {
 
                 {/* Filters */}
                 <Card>
-                    <CardHeader>
+                    <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                         <CardTitle className="text-lg">Filters</CardTitle>
+                        <div className="flex flex-wrap bg-muted p-1 rounded-lg gap-1 w-full sm:w-auto">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className={`h-8 px-3 text-xs font-medium ${startDate === endDate && startDate === (new Date().toISOString().split('T')[0]) ? 'bg-white shadow-sm' : ''}`}
+                                onClick={() => setQuickDate('today')}
+                            >
+                                Today
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 px-3 text-xs font-medium"
+                                onClick={() => setQuickDate('yesterday')}
+                            >
+                                Yesterday
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 px-3 text-xs font-medium"
+                                onClick={() => setQuickDate('week')}
+                            >
+                                Week
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 px-3 text-xs font-medium"
+                                onClick={() => setQuickDate('month')}
+                            >
+                                Month
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 px-3 text-xs font-medium text-red-500 hover:text-red-600"
+                                onClick={() => {
+                                    setStartDate('');
+                                    setEndDate('');
+                                    setTypeFilter('all');
+                                    setStatusFilter('all');
+                                    setPage(1);
+                                }}
+                            >
+                                Clear
+                            </Button>
+                        </div>
                     </CardHeader>
                     <CardContent>
-                        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+                        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">Search</label>
                                 <div className="relative">
@@ -240,20 +320,70 @@ export default function TransactionsPage() {
 
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">Start Date</label>
-                                <Input
-                                    type="date"
-                                    value={startDate}
-                                    onChange={(e) => setStartDate(e.target.value)}
-                                />
+                                <div className="relative">
+                                    <Input
+                                        type="text"
+                                        placeholder="DD/MM/YYYY"
+                                        value={startDate ? startDate.split('-').reverse().join('/') : ''}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            const parts = val.split('/');
+                                            if (parts.length === 3) {
+                                                const [d, m, y] = parts;
+                                                if (y.length === 4) {
+                                                    setStartDate(`${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`);
+                                                }
+                                            }
+                                        }}
+                                        className="pr-10"
+                                    />
+                                    <div className="absolute right-0 top-0 h-full w-10 flex items-center justify-center pointer-events-none">
+                                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                                    </div>
+                                    <input
+                                        type="date"
+                                        value={startDate || ''}
+                                        onChange={(e) => {
+                                            setStartDate(e.target.value);
+                                            setPage(1);
+                                        }}
+                                        className="absolute inset-0 opacity-0 cursor-pointer"
+                                    />
+                                </div>
                             </div>
 
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">End Date</label>
-                                <Input
-                                    type="date"
-                                    value={endDate}
-                                    onChange={(e) => setEndDate(e.target.value)}
-                                />
+                                <div className="relative">
+                                    <Input
+                                        type="text"
+                                        placeholder="DD/MM/YYYY"
+                                        value={endDate ? endDate.split('-').reverse().join('/') : ''}
+                                        onChange={(e) => {
+                                            const val = e.target.value;
+                                            const parts = val.split('/');
+                                            if (parts.length === 3) {
+                                                const [d, m, y] = parts;
+                                                if (y.length === 4) {
+                                                    setEndDate(`${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`);
+                                                }
+                                            }
+                                        }}
+                                        className="pr-10"
+                                    />
+                                    <div className="absolute right-0 top-0 h-full w-10 flex items-center justify-center pointer-events-none">
+                                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                                    </div>
+                                    <input
+                                        type="date"
+                                        value={endDate || ''}
+                                        onChange={(e) => {
+                                            setEndDate(e.target.value);
+                                            setPage(1);
+                                        }}
+                                        className="absolute inset-0 opacity-0 cursor-pointer"
+                                    />
+                                </div>
                             </div>
                         </div>
                     </CardContent>
@@ -262,7 +392,7 @@ export default function TransactionsPage() {
                 {/* Transactions Table */}
                 <Card>
                     <CardHeader>
-                        <CardTitle>Transaction History</CardTitle>
+                        <CardTitle> History</CardTitle>
                         <CardDescription>
                             {filteredTransactions.length} of {transactions.length} transactions
                         </CardDescription>
@@ -278,79 +408,80 @@ export default function TransactionsPage() {
                             </div>
                         ) : (
                             <div className="space-y-4">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead>Date</TableHead>
-                                            <TableHead>Type</TableHead>
-                                            <TableHead>Contact</TableHead>
-                                            <TableHead>Products</TableHead>
-                                            <TableHead>Amount</TableHead>
-                                            <TableHead>Discount</TableHead>
-                                            <TableHead>Status</TableHead>
-                                            <TableHead>Payment</TableHead>
-                                            <TableHead className="text-right">Actions</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {filteredTransactions.map((transaction) => (
-                                            <TableRow key={transaction._id}>
-                                                <TableCell>
-                                                    {new Date(transaction.date).toLocaleDateString()}
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Badge className={getTypeColor(transaction.type)}>
-                                                        {transaction.type}
-                                                    </Badge>
-                                                </TableCell>
-                                                <TableCell>
-                                                    {transaction.customerName || transaction.vendorName || 'N/A'}
-                                                </TableCell>
-                                                <TableCell>
-                                                    <div className="space-y-1">
-                                                        {transaction.products.slice(0, 2).map((product, index) => (
-                                                            <div key={index} className="text-sm">
-                                                                {product.productName} (×{product.quantity})
-                                                            </div>
-                                                        ))}
-                                                        {transaction.products.length > 2 && (
-                                                            <div className="text-sm text-muted-foreground">
-                                                                +{transaction.products.length - 2} more
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <span className={`font-medium ${transaction.type === 'sale' ? 'text-green-600' : 'text-red-600'
-                                                        }`}>
-                                                        ₹{transaction.totalAmount.toLocaleString()}
-                                                    </span>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <span className={`font-medium ${transaction.type === 'sale' ? 'text-green-600' : 'text-red-600'
-                                                        }`}>
-                                                        ₹{transaction.discount.toLocaleString()}
-                                                    </span>
-                                                </TableCell>
-                                                <TableCell>
-                                                    <Badge className={getStatusColor(transaction.status)}>
-                                                        {transaction.status}
-                                                    </Badge>
-                                                </TableCell>
-                                                <TableCell className="capitalize">
-                                                    {transaction.paymentMethod}
-                                                </TableCell>
-                                                <TableCell className="text-right">
-                                                    <Button variant="ghost" size="sm" asChild>
-                                                        <Link href={`/transactions/${transaction._id}`}>
-                                                            <Eye className="h-4 w-4" />
-                                                        </Link>
-                                                    </Button>
-                                                </TableCell>
+                                <div className="rounded-md border overflow-x-auto bg-white">
+                                    <Table className="min-w-[1000px]">
+                                        <TableHeader className="bg-slate-50">
+                                            <TableRow>
+                                                <TableHead className="font-bold">Date</TableHead>
+                                                <TableHead className="font-bold">Type</TableHead>
+                                                <TableHead className="font-bold">Contact</TableHead>
+                                                <TableHead className="font-bold">Products</TableHead>
+                                                <TableHead className="font-bold">Amount</TableHead>
+                                                <TableHead className="font-bold">Balance</TableHead>
+                                                <TableHead className="font-bold">Status</TableHead>
+                                                <TableHead className="font-bold">Payment</TableHead>
+                                                <TableHead className="text-right font-bold">Actions</TableHead>
                                             </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {filteredTransactions.map((transaction) => (
+                                                <TableRow key={transaction._id}>
+                                                    <TableCell>
+                                                        {new Date(transaction.date).toLocaleDateString('en-GB')}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Badge className={getTypeColor(transaction.type)}>
+                                                            {transaction.type}
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {transaction.customerName || transaction.vendorName || 'N/A'}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="space-y-1">
+                                                            {transaction.products.slice(0, 2).map((product, index) => (
+                                                                <div key={index} className="text-sm">
+                                                                    {product.productName} (×{product.quantity})
+                                                                </div>
+                                                            ))}
+                                                            {transaction.products.length > 2 && (
+                                                                <div className="text-sm text-muted-foreground">
+                                                                    +{transaction.products.length - 2} more
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <span className={`font-medium ${transaction.type === 'sale' ? 'text-green-600' : 'text-red-600'
+                                                            }`}>
+                                                            RS {Number(transaction.totalAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                        </span>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <span className="font-bold text-red-600">
+                                                            RS {Number(transaction.totalAmount - (transaction.paidAmount || 0)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                        </span>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <Badge className={getStatusColor(transaction.status)}>
+                                                            {transaction.status}
+                                                        </Badge>
+                                                    </TableCell>
+                                                    <TableCell className="capitalize">
+                                                        {transaction.paymentMethod}
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                        <Button variant="ghost" size="sm" asChild>
+                                                            <Link href={`/transactions/${transaction._id}`}>
+                                                                <Eye className="h-4 w-4" />
+                                                            </Link>
+                                                        </Button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+                                </div>
 
                                 {/* Pagination */}
                                 <div className="flex items-center justify-between">

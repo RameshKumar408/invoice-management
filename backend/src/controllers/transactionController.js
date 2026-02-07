@@ -480,6 +480,76 @@ const getTransactionSummary = asyncHandler(async (req, res) => {
   });
 });
 
+/**
+ * @desc    Add a payment to a transaction (Partial/Split Payment)
+ * @route   POST /api/transactions/:id/payments
+ * @access  Private
+ */
+const addPayment = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { amount, method, note, date } = req.body;
+
+  const transaction = await Transaction.findOne({
+    _id: id,
+    businessId: req.businessId
+  });
+
+  if (!transaction) {
+    return res.status(404).json({
+      success: false,
+      message: 'Transaction not found'
+    });
+  }
+
+  const paymentAmount = Number(amount);
+  if (isNaN(paymentAmount) || paymentAmount <= 0) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid payment amount'
+    });
+  }
+
+  const remainingBalance = transaction.totalAmount - (transaction.paidAmount || 0);
+  if (paymentAmount > remainingBalance + 0.01) { // 0.01 for rounding errors
+    return res.status(400).json({
+      success: false,
+      message: `Payment amount ₹${paymentAmount} exceeds remaining balance ₹${remainingBalance.toFixed(2)}`
+    });
+  }
+
+  // Update transaction
+  transaction.payments.push({
+    amount: paymentAmount,
+    method: method || 'cash',
+    note,
+    date: date || new Date()
+  });
+
+  transaction.paidAmount = (transaction.paidAmount || 0) + paymentAmount;
+
+  // If fully paid, update status to completed
+  if (transaction.paidAmount >= transaction.totalAmount - 0.01) {
+    transaction.status = 'completed';
+  }
+
+  await transaction.save();
+
+  // If it was a sale on credit, we should also update the contact balance
+  if (transaction.type === 'sale') {
+    const contact = await Contact.findById(transaction.customerId);
+    if (contact) {
+      contact.currentBalance = Math.max(0, contact.currentBalance - paymentAmount);
+      await contact.save();
+    }
+  }
+
+  res.json({
+    success: true,
+    message: 'Payment added successfully',
+    data: { transaction }
+  });
+});
+
 module.exports = {
   getTransactions,
   getTransaction,
@@ -487,5 +557,6 @@ module.exports = {
   getSales,
   getPurchases,
   updateTransactionStatus,
-  getTransactionSummary
+  getTransactionSummary,
+  addPayment
 };

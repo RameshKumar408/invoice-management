@@ -195,14 +195,29 @@ export default function AddPurchasePage() {
                         {/* Vendor & Payment Info */}
                         <SlideIn direction="up" delay={0.2}>
                             <Card>
-                                <CardHeader>
-                                    <CardTitle className="flex items-center gap-2">
-                                        <User className="h-5 w-5" />
-                                        Vendor & Payment Information
-                                    </CardTitle>
-                                    <CardDescription>
-                                        Select the vendor and payment details
-                                    </CardDescription>
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                                    <div className="space-y-1.5">
+                                        <CardTitle className="flex items-center gap-2">
+                                            <User className="h-5 w-5" />
+                                            Vendor & Payment Information
+                                        </CardTitle>
+                                        <CardDescription>
+
+                                            Select the vendor and payment details
+                                        </CardDescription>
+                                    </div>
+
+                                    <ScaleOnHover>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => router.push('/contacts/new')}
+                                        >
+                                            <Plus className="mr-2 h-4 w-4" />
+                                            Add Vendor
+                                        </Button>
+                                    </ScaleOnHover>
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                     <div className="grid gap-6 md:grid-cols-2">
@@ -298,17 +313,7 @@ export default function AddPurchasePage() {
                                             <ShoppingCart className="h-5 w-5" />
                                             <span>Products</span>
                                         </div>
-                                        <ScaleOnHover>
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => append({ productId: '', quantity: 1, price: 0, unitType: 'case' })}
-                                            >
-                                                <Plus className="mr-2 h-4 w-4" />
-                                                Add Product
-                                            </Button>
-                                        </ScaleOnHover>
+
                                     </CardTitle>
                                     <CardDescription>
                                         Add products to this purchase transaction (inventory will be increased)
@@ -417,7 +422,7 @@ export default function AddPurchasePage() {
                                                 <div className="space-y-2">
                                                     <Label>Total</Label>
                                                     <div className="h-10 flex items-center px-3 py-2 border rounded-md bg-muted font-medium">
-                                                        RS {(form.watch(`products.${index}.quantity`) * form.watch(`products.${index}.price`)).toFixed(2)}
+                                                        RS {Number(form.watch(`products.${index}.quantity`) * form.watch(`products.${index}.price`)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                     </div>
                                                 </div>
 
@@ -442,14 +447,14 @@ export default function AddPurchasePage() {
 
                                     {/* Stock Info */}
                                     <SlideIn direction="up" delay={0.4}>
-                                        <div className="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                                            <div className="flex items-center gap-2 mb-2">
+                                        <div>
+                                            {/* <div className="flex items-center gap-2 mb-2">
                                                 <Package className="h-4 w-4 text-blue-600" />
                                                 <span className="text-sm font-semibold text-blue-800">Stock Update Information</span>
                                             </div>
                                             <p className="text-sm text-blue-700 mb-2">
                                                 Purchasing these products will automatically increase your inventory stock levels.
-                                            </p>
+                                            </p> */}
                                             <div className="space-y-1">
                                                 {fields.map((_, index) => {
                                                     const productId = form.watch(`products.${index}.productId`);
@@ -469,25 +474,37 @@ export default function AddPurchasePage() {
                                             </div>
                                         </div>
                                     </SlideIn>
-
+                                    <div className="flex justify-end">
+                                        <ScaleOnHover>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => append({ productId: '', quantity: 1, price: 0, unitType: 'case' })}
+                                            >
+                                                <Plus className="mr-2 h-4 w-4" />
+                                                Add Product
+                                            </Button>
+                                        </ScaleOnHover>
+                                    </div>
                                     {/* Total Amount Section */}
                                     <div className="border-t pt-4 space-y-2">
                                         <div className="flex justify-between items-center text-muted-foreground">
                                             <span>Subtotal:</span>
-                                            <span>RS {calculateAmounts().subtotal.toFixed(2)}</span>
+                                            <span>RS {Number(calculateAmounts().subtotal).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                         </div>
                                         <div className="flex justify-between items-center text-muted-foreground">
-                                            <span>SGST (2.5%):</span>
-                                            <span>RS {calculateAmounts().sgst.toFixed(2)}</span>
+                                            <span>SGST </span>
+                                            <span>RS {Number(calculateAmounts().sgst).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                         </div>
                                         <div className="flex justify-between items-center text-muted-foreground">
-                                            <span>CGST (2.5%):</span>
-                                            <span>RS {calculateAmounts().cgst.toFixed(2)}</span>
+                                            <span>CGST </span>
+                                            <span>RS {Number(calculateAmounts().cgst).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                         </div>
                                         <div className="flex justify-between items-center pt-2 border-t">
                                             <span className="text-lg font-bold">Total Amount:</span>
                                             <span className="text-3xl font-bold text-red-600">
-                                                RS {calculateAmounts().total.toFixed(2)}
+                                                RS {Number(calculateAmounts().total).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                             </span>
                                         </div>
                                     </div>

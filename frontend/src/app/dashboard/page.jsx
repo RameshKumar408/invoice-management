@@ -46,25 +46,25 @@ export default function DashboardPage() {
         <ProtectedRoute>
             <Layout>
                 <div className="space-y-6">
-                    <div>
-                        <h1 className="text-3xl font-bold">Dashboard</h1>
-                        <p className="text-muted-foreground">Welcome to your inventory management system</p>
-
-
-                    </div>
-                    <div className="flex gap-2">
-                        <Button asChild>
-                            <Link href="/transactions/sale">
-                                <Plus className="mr-2 h-4 w-4" />
-                                Add Sale
-                            </Link>
-                        </Button>
-                        <Button variant="outline" asChild>
-                            <Link href="/transactions/purchase">
-                                <Plus className="mr-2 h-4 w-4" />
-                                Add Purchase
-                            </Link>
-                        </Button>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div>
+                            <h1 className="text-3xl font-bold">Dashboard</h1>
+                            <p className="text-muted-foreground">Welcome to your inventory management system</p>
+                        </div>
+                        <div className="flex gap-2">
+                            <Button asChild>
+                                <Link href="/transactions/sale">
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    Add Sale
+                                </Link>
+                            </Button>
+                            <Button variant="outline" asChild>
+                                <Link href="/transactions/purchase">
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    Add Purchase
+                                </Link>
+                            </Button>
+                        </div>
                     </div>
 
                     {/* Overview Cards */}
@@ -121,7 +121,7 @@ export default function DashboardPage() {
                             </CardHeader>
                             <CardContent>
                                 <div className="text-2xl font-bold text-green-500">
-                                    ${summary?.monthly.sales?.toLocaleString() || '0'}
+                                    RS {Number(summary?.monthly.sales || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </div>
                                 <p className="text-xs text-muted-foreground">
                                     {summary?.monthly.transactionCount || 0} transactions
@@ -136,7 +136,7 @@ export default function DashboardPage() {
                             </CardHeader>
                             <CardContent>
                                 <div className="text-2xl font-bold text-red-500">
-                                    ${summary?.monthly.purchases?.toLocaleString() || '0'}
+                                    RS {Number(summary?.monthly.purchases || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </div>
                             </CardContent>
                         </Card>
@@ -149,7 +149,7 @@ export default function DashboardPage() {
                             <CardContent>
                                 <div className={`text-2xl font-bold ${(summary?.monthly.profit || 0) >= 0 ? 'text-green-500' : 'text-red-500'
                                     }`}>
-                                    ${summary?.monthly.profit?.toLocaleString() || '0'}
+                                    RS {Number(summary?.monthly.profit || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </div>
                             </CardContent>
                         </Card>
@@ -201,12 +201,12 @@ export default function DashboardPage() {
                                                         {transaction.type === 'sale' ? transaction.customerName : transaction.vendorName}
                                                     </p>
                                                     <p className="text-sm text-muted-foreground">
-                                                        {transaction.type} • {new Date(transaction.date).toLocaleDateString()}
+                                                        {transaction.type} • {new Date(transaction.date).toLocaleDateString('en-GB')}
                                                     </p>
                                                 </div>
                                                 <div className={`font-medium ${transaction.type === 'sale' ? 'text-green-500' : 'text-red-500'
                                                     }`}>
-                                                    {transaction.type === 'sale' ? '+' : '-'}${transaction.totalAmount.toLocaleString()}
+                                                    {transaction.type === 'sale' ? '+' : '-'}RS {Number(transaction.totalAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                 </div>
                                             </div>
                                         ))}

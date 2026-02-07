@@ -111,7 +111,7 @@ export default function ProductsPage() {
                                                     </div>
                                                 </TableCell>
                                                 <TableCell>{product.category}</TableCell>
-                                                <TableCell>₹{product.price.toFixed(2)}</TableCell>
+                                                <TableCell>RS {Number(product.price || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</TableCell>
                                                 <TableCell>
                                                     <div className="flex items-center space-x-2">
                                                         <Package className="h-4 w-4" />

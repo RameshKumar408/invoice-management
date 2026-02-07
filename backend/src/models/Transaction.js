@@ -102,6 +102,31 @@ const transactionSchema = new mongoose.Schema({
     enum: ['cash', 'card', 'bank_transfer', 'credit', 'other'],
     default: 'cash'
   },
+  payments: [{
+    amount: {
+      type: Number,
+      required: true
+    },
+    date: {
+      type: Date,
+      default: Date.now
+    },
+    method: {
+      type: String,
+      enum: ['cash', 'card', 'bank_transfer', 'other'],
+      default: 'cash'
+    },
+    note: {
+      type: String,
+      trim: true
+    }
+  }],
+  paidAmount: {
+    type: Number,
+    default: function () {
+      return this.status === 'completed' ? this.totalAmount : 0;
+    }
+  },
   notes: {
     type: String,
     trim: true,

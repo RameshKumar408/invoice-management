@@ -32,7 +32,7 @@ const navigation = [
     { name: 'Products', href: '/products', icon: Package },
     { name: 'Contacts', href: '/contacts', icon: Users },
     { name: 'Transactions', href: '/transactions', icon: Receipt },
-    { name: 'Reports', href: '/reports', icon: BarChart3 },
+    // { name: 'Reports', href: '/reports', icon: BarChart3 },
 ];
 
 export function Layout({ children }) {
@@ -211,7 +211,7 @@ export function Layout({ children }) {
                 </aside>
 
                 {/* Main content */}
-                <main className="flex-1 p-4 md:p-6 transition-all duration-300 ease-in-out min-h-[calc(100vh-4rem)]">
+                <main className="flex-1 min-w-0 p-4 md:p-6 transition-all duration-300 ease-in-out min-h-[calc(100vh-4rem)]">
                     {children}
                 </main>
             </div>
