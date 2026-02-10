@@ -23,7 +23,10 @@ import {
     User,
     Menu,
     X,
-    Home
+    Home,
+    FileText,
+    ShoppingCart,
+    ChevronDown
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -33,6 +36,8 @@ const navigation = [
     { name: 'Products', href: '/products', icon: Package },
     { name: 'Contacts', href: '/contacts', icon: Users },
     { name: 'Transactions', href: '/transactions', icon: Receipt },
+    { name: 'Add Sale', href: '/transactions', icon: ShoppingCart },
+    { name: 'Add Purchase', href: '/transactions', icon: ChevronDown },
     // { name: 'Reports', href: '/reports', icon: BarChart3 },
 ];
 
@@ -63,6 +68,52 @@ export function Navigation() {
                     <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
                         {navigation.map((item, index) => {
                             const Icon = item.icon;
+
+                            // Special handling for Transactions with dropdown
+                            if (item.name === 'Transactions') {
+                                return (
+                                    <FadeIn key={item.href} delay={index * 0.1}>
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <button
+                                                    className={cn(
+                                                        'flex items-center space-x-2 transition-all duration-300 hover:text-foreground/80 hover:scale-105 px-3 py-2 rounded-md',
+                                                        pathname.startsWith(item.href)
+                                                            ? 'text-foreground bg-accent/50'
+                                                            : 'text-foreground/60'
+                                                    )}
+                                                >
+                                                    <Icon className="h-4 w-4" />
+                                                    <span>{item.name}</span>
+                                                    <ChevronDown className="h-3 w-3" />
+                                                </button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="start" className="w-48">
+                                                <DropdownMenuItem asChild>
+                                                    <Link href="/transactions" className="flex items-center cursor-pointer">
+                                                        <Receipt className="mr-2 h-4 w-4" />
+                                                        View All Transactions
+                                                    </Link>
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem asChild>
+                                                    <Link href="/transactions/sale" className="flex items-center cursor-pointer">
+                                                        <FileText className="mr-2 h-4 w-4" />
+                                                        Add Sale
+                                                    </Link>
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem asChild>
+                                                    <Link href="/transactions/purchase" className="flex items-center cursor-pointer">
+                                                        <ShoppingCart className="mr-2 h-4 w-4" />
+                                                        Add Purchase
+                                                    </Link>
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </FadeIn>
+                                );
+                            }
+
+                            // Regular navigation items
                             return (
                                 <FadeIn key={item.href} delay={index * 0.1}>
                                     <Link
@@ -171,6 +222,36 @@ export function Navigation() {
                                             </StaggerItem>
                                         );
                                     })}
+
+                                    {/* Action Buttons - Mobile */}
+                                    <div className="pt-3 mt-3 border-t space-y-2">
+                                        <StaggerItem>
+                                            <Button
+                                                asChild
+                                                size="sm"
+                                                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-md hover:shadow-lg transition-all duration-300"
+                                                onClick={() => setMobileMenuOpen(false)}
+                                            >
+                                                <Link href="/transactions/sale" className="flex items-center justify-center space-x-2">
+                                                    <FileText className="h-4 w-4" />
+                                                    <span>Add Invoice</span>
+                                                </Link>
+                                            </Button>
+                                        </StaggerItem>
+                                        <StaggerItem>
+                                            <Button
+                                                asChild
+                                                size="sm"
+                                                className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-md hover:shadow-lg transition-all duration-300"
+                                                onClick={() => setMobileMenuOpen(false)}
+                                            >
+                                                <Link href="/transactions/purchase" className="flex items-center justify-center space-x-2">
+                                                    <ShoppingCart className="h-4 w-4" />
+                                                    <span>Add Purchase</span>
+                                                </Link>
+                                            </Button>
+                                        </StaggerItem>
+                                    </div>
                                 </div>
                             </StaggerContainer>
                         </div>

@@ -119,7 +119,8 @@ const createTransaction = asyncHandler(async (req, res) => {
     cgst,
     discount,
     status,
-    totalAmount: bodyTotalAmount
+    totalAmount: bodyTotalAmount,
+    initialPayment // Destructure initialPayment
   } = req.body;
   const businessId = req.businessId;
 
@@ -236,6 +237,9 @@ const createTransaction = asyncHandler(async (req, res) => {
     const sequence = String(count + 1).padStart(5, '0');
     const invoiceNumber = `${prefix}-${sequence}`;
 
+    const finalTotalAmount = bodyTotalAmount || (subtotal || calculatedSubtotal) + (sgst || 0) + (cgst || 0) - (discount || 0);
+    const paidAmount = Number(initialPayment) || 0;
+
     // Create transaction data
     const transactionData = {
       type,
@@ -244,13 +248,25 @@ const createTransaction = asyncHandler(async (req, res) => {
       sgst: sgst || 0,
       cgst: cgst || 0,
       discount: discount || 0,
-      totalAmount: bodyTotalAmount || (subtotal || calculatedSubtotal) + (sgst || 0) + (cgst || 0) - (discount || 0),
+      totalAmount: finalTotalAmount,
       businessId,
       paymentMethod: paymentMethod || 'cash',
-      status: status || 'completed',
+      status: status || 'pending', // Default to pending unless fully paid
       notes,
-      invoiceNumber
+      invoiceNumber,
+      paidAmount: paidAmount,
+      payments: paidAmount > 0 ? [{
+        amount: paidAmount,
+        method: paymentMethod || 'cash',
+        date: new Date(),
+        note: 'Initial Payment'
+      }] : []
     };
+
+    // If fully paid, mark as completed
+    if (paidAmount >= finalTotalAmount - 0.01) {
+      transactionData.status = 'completed';
+    }
 
     // Add contact information based on transaction type
     if (type === 'sale') {
@@ -265,9 +281,13 @@ const createTransaction = asyncHandler(async (req, res) => {
     const transaction = await Transaction.create(transactionData);
 
     // Update contact balance if needed
-    if (type === 'sale' && paymentMethod === 'credit') {
-      contact.currentBalance += transactionData.totalAmount;
-      await contact.save();
+    if (type === 'sale') {
+      // Add the remaining unpaid amount to their balance
+      const balanceToAdd = Math.max(0, finalTotalAmount - paidAmount);
+      if (balanceToAdd > 0) {
+        contact.currentBalance += balanceToAdd;
+        await contact.save();
+      }
     }
 
 

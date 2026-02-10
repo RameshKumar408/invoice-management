@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Layout } from '@/components/Layout';
 import { Button } from '@/components/ui/button';
@@ -35,6 +35,13 @@ export default function TransactionsPage() {
     const [endDate, setEndDate] = useState('');
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
+    const tableRef = useRef(null);
+
+    const scrollToTable = () => {
+        if (window.innerWidth < 768) {
+            tableRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    };
 
     const fetchTransactions = async () => {
         try {
@@ -162,7 +169,14 @@ export default function TransactionsPage() {
                 {/* Summary Cards */}
                 {summary && (
                     <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-                        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-green-500 shadow-sm">
+                        <Card
+                            className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-green-500 shadow-sm cursor-pointer hover:scale-105"
+                            onClick={() => {
+                                setTypeFilter('sale');
+                                setPage(1);
+                                scrollToTable();
+                            }}
+                        >
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                 <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Total Sales</CardTitle>
                                 <div className="p-2 bg-green-50 rounded-full">
@@ -181,7 +195,14 @@ export default function TransactionsPage() {
                             </CardContent>
                         </Card>
 
-                        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-red-500 shadow-sm">
+                        <Card
+                            className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-red-500 shadow-sm cursor-pointer hover:scale-105"
+                            onClick={() => {
+                                setTypeFilter('purchase');
+                                setPage(1);
+                                scrollToTable();
+                            }}
+                        >
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                 <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Total Purchases</CardTitle>
                                 <div className="p-2 bg-red-50 rounded-full">
@@ -390,7 +411,7 @@ export default function TransactionsPage() {
                 </Card>
 
                 {/* Transactions Table */}
-                <Card>
+                <Card ref={tableRef}>
                     <CardHeader>
                         <CardTitle> History</CardTitle>
                         <CardDescription>
@@ -458,7 +479,7 @@ export default function TransactionsPage() {
                                                         </span>
                                                     </TableCell>
                                                     <TableCell>
-                                                        <span className="font-bold text-red-600">
+                                                        <span className={`font-bold ${Number((transaction.totalAmount - (transaction.paidAmount || 0)).toFixed(2)) === 0 ? 'text-green-600' : 'text-red-600'}`}>
                                                             RS {Number(transaction.totalAmount - (transaction.paidAmount || 0)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                         </span>
                                                     </TableCell>

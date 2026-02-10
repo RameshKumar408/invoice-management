@@ -23,7 +23,9 @@ import {
     Menu,
     X,
     PanelLeftClose,
-    PanelLeft
+    PanelLeft,
+    ShoppingCart,
+    ChevronDown
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -32,6 +34,8 @@ const navigation = [
     { name: 'Products', href: '/products', icon: Package },
     { name: 'Contacts', href: '/contacts', icon: Users },
     { name: 'Transactions', href: '/transactions', icon: Receipt },
+    { name: 'Add Sale', href: '/transactions/sale', icon: ShoppingCart },
+    { name: 'Add Purchase', href: '/transactions/purchase', icon: ChevronDown },
     // { name: 'Reports', href: '/reports', icon: BarChart3 },
 ];
 

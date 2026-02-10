@@ -53,6 +53,7 @@ const saleFormSchema = z.object({
         unitType: z.enum(['case', 'single']),
     })).min(1, 'At least one product is required'),
     discount: z.number().min(0, 'Discount must be positive').optional(),
+    initialPayment: z.number().min(0, 'Initial payment must be positive').optional(),
 });
 
 export default function AddSalePage() {
@@ -73,6 +74,7 @@ export default function AddSalePage() {
             notes: '',
             products: [{ productId: '', quantity: 1, price: 0, incPrice: 0, unitType: 'case' }],
             discount: 0,
+            initialPayment: 0,
         },
     });
 
@@ -157,6 +159,7 @@ export default function AddSalePage() {
     const calculateAmounts = () => {
         const watchedProducts = form.watch('products');
         const discountAmount = form.watch('discount') || 0;
+        const initialPayment = form.watch('initialPayment') || 0;
 
         let subtotal = 0;
         let totalCgst = 0;
@@ -179,6 +182,7 @@ export default function AddSalePage() {
 
         const originalAmount = subtotal + totalCgst + totalSgst;
         const total = originalAmount - discountAmount;
+        const balanceDue = Math.max(0, total - initialPayment);
 
         return {
             subtotal,
@@ -186,7 +190,8 @@ export default function AddSalePage() {
             cgst: totalCgst,
             originalAmount,
             total: Math.max(0, total),
-            discountAmount
+            discountAmount,
+            balanceDue
         };
     };
 
@@ -202,6 +207,7 @@ export default function AddSalePage() {
             sgst: amounts.sgst,
             cgst: amounts.cgst,
             discount: data.discount || 0,
+            initialPayment: data.initialPayment || 0,
             totalAmount: amounts.total,
         };
         setPendingData(saleData);
@@ -625,6 +631,35 @@ export default function AddSalePage() {
                                                                     {...field}
                                                                     onChange={(e) => field.onChange(Number(e.target.value))}
                                                                     className="text-right h-9 transition-all duration-300 focus:ring-2 focus:ring-primary/50 bg-white"
+                                                                    placeholder="0.00"
+                                                                />
+                                                            </FormControl>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Initial Payment Field */}
+                                        <div className="flex justify-between items-center py-2 border-b border-dashed bg-green-50/50 px-2 rounded">
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-medium text-green-700">Initial Payment:</span>
+                                            </div>
+                                            <div className="w-32">
+                                                <FormField
+                                                    control={form.control}
+                                                    name="initialPayment"
+                                                    render={({ field }) => (
+                                                        <FormItem className="space-y-0">
+                                                            <FormControl>
+                                                                <Input
+                                                                    type="number"
+                                                                    step="0.01"
+                                                                    min="0"
+                                                                    {...field}
+                                                                    onChange={(e) => field.onChange(Number(e.target.value))}
+                                                                    className="text-right h-9 transition-all duration-300 focus:ring-2 focus:ring-green-500/50 bg-white border-green-200"
                                                                     placeholder="0.00"
                                                                 />
                                                             </FormControl>
