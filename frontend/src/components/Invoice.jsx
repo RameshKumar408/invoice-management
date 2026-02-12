@@ -36,19 +36,18 @@ export const Invoice = React.forwardRef(({ transaction, businessDetails }, ref) 
     // Reusable invoice content component
     const InvoiceContent = ({ copyLabel }) => (
         <div className="relative">
-            {/* Copy Label */}
-            {copyLabel && (
-                <div className="absolute top-0 right-0 bg-gray-200 px-3 py-1 text-[8pt] font-bold uppercase border border-black">
-                    {copyLabel}
-                </div>
-            )}
-
-            {/* Header section */}
+            {/* Header section with integrated Copy Label */}
             <div className="text-center border-b-2 border-black pb-1 mb-2">
-                <p className="text-[7pt] uppercase mb-0.5">Tax Invoice</p>
-                <h1 className="text-lg font-bold uppercase">{businessDetails.name}</h1>
+                <div className="flex justify-between items-center mb-1">
+                    <div className="w-20"></div>
+                    <p className="text-[7pt] uppercase font-bold flex-1">Tax Invoice</p>
+                    <div className="bg-gray-100 px-2 py-0.5 text-[7pt] font-bold uppercase border border-black min-w-[100px]">
+                        {copyLabel}
+                    </div>
+                </div>
+                <h1 className="text-lg font-bold uppercase -mt-2">{businessDetails.name}</h1>
                 <p className="text-[7pt] leading-tight">{businessDetails.address}</p>
-                <div className="flex justify-center gap-4 text-[7pt]">
+                <div className="flex justify-center gap-4 text-[7pt] mt-0.5">
                     <span>PH NO:- {businessDetails.phone}</span>
                 </div>
                 <p className="font-bold text-[7pt]">GSTIN:- {businessDetails.gstin}</p>
@@ -69,109 +68,109 @@ export const Invoice = React.forwardRef(({ transaction, businessDetails }, ref) 
                 </div>
                 <div className="p-0">
                     <div className="grid grid-cols-2 border-b-2 border-black">
-                        <div className="border-r-2 border-black p-0.5 font-bold text-[6pt] text-center uppercase">Dated</div>
-                        <div className="p-0.5 font-bold text-[6pt] text-center uppercase">Invoice No</div>
+                        <div className="border-r-2 border-black py-0.5 px-0.5 font-bold text-[6pt] text-center uppercase flex items-center justify-center">Dated</div>
+                        <div className="py-0.5 px-0.5 font-bold text-[6pt] text-center uppercase flex items-center justify-center">Invoice No</div>
                     </div>
-                    <div className="grid grid-cols-2 border-b-2 border-black min-h-[20px]">
-                        <div className="border-r-2 border-black p-0.5 text-center text-[7pt]">
+                    <div className="grid grid-cols-2 border-b-2 border-black min-h-[15px]">
+                        <div className="border-r-2 border-black py-0.5 px-0.5 text-center text-[7pt] flex items-center justify-center font-bold">
                             {new Date(transaction.date).toLocaleDateString('en-GB')}
                         </div>
-                        <div className="p-0.5 text-center text-[7pt] font-bold">
+                        <div className="py-0.5 px-0.5 text-center text-[7pt] font-black flex items-center justify-center">
                             {transaction.invoiceNumber || transaction._id.slice(-6).toUpperCase()}
                         </div>
                     </div>
-                    <div className="p-0.5 font-bold text-[6pt] uppercase text-center border-b-2 border-black bg-gray-50">Picker Sign,</div>
-                    <div className="min-h-[15px] border-b-2 border-black"></div>
-                    <div className="p-0.5 font-bold text-[6pt] uppercase text-center bg-gray-50">Buyer Sign,</div>
+                    <div className="py-0.5 px-0.5 font-bold text-[6pt] uppercase text-center border-b-2 border-black bg-gray-50 flex items-center justify-center">Picker Sign</div>
+                    <div className="min-h-[12px] border-b-2 border-black"></div>
+                    <div className="py-0.5 px-0.5 font-bold text-[6pt] uppercase text-center bg-gray-50 flex items-center justify-center">Buyer Sign</div>
                 </div>
             </div>
 
             {/* Items Table */}
-            <table className="w-full border-x-2 border-b-2 border-black text-[7pt]">
+            <table className="w-full border-x-2 border-b-2 border-black text-[7pt] border-collapse">
                 <thead>
                     <tr className="bg-gray-50 border-b-2 border-black">
-                        <th className="border-r-2 border-black font-bold uppercase p-0.5 w-8">Si</th>
-                        <th className="border-r-2 border-black font-bold uppercase p-0.5">Description</th>
-                        <th className="border-r-2 border-black font-bold uppercase p-0.5 w-16">HSN</th>
-                        <th className="border-r-2 border-black font-bold uppercase p-0.5 w-12">Piece</th>
-                        <th className="border-r-2 border-black font-bold uppercase p-0.5 w-12">Case</th>
-                        <th className="border-r-2 border-black font-bold uppercase p-0.5 w-14">Price</th>
-                        <th className="font-bold uppercase p-0.5 w-16">Rate</th>
+                        <th className="border-r-2 border-black font-bold uppercase py-0.5 px-0.5 w-8 text-center">Si</th>
+                        <th className="border-r-2 border-black font-bold uppercase py-0.5 px-1 text-left">Description</th>
+                        <th className="border-r-2 border-black font-bold uppercase py-0.5 px-0.5 w-16 text-center">HSN</th>
+                        <th className="border-r-2 border-black font-bold uppercase py-0.5 px-0.5 w-12 text-center">Piece</th>
+                        <th className="border-r-2 border-black font-bold uppercase py-0.5 px-0.5 w-12 text-center">Case</th>
+                        <th className="border-r-2 border-black font-bold uppercase py-0.5 px-1 w-14 text-right">Price</th>
+                        <th className="font-bold uppercase py-0.5 px-1 w-16 text-right">Rate</th>
                     </tr>
                 </thead>
                 <tbody>
                     {transaction.products.map((item, index) => (
                         <tr key={index} className="border-b border-gray-300">
-                            <td className="border-r-2 border-black p-0.5 text-center">{index + 1}</td>
-                            <td className="border-r-2 border-black p-0.5 uppercase">{item.productName}</td>
-                            <td className="border-r-2 border-black p-0.5 text-center">{item.HSN || item.productId?.HSN || '-'}</td>
-                            <td className="border-r-2 border-black p-0.5 text-center">{item.unitType === 'single' ? item.quantity : 0}</td>
-                            <td className="border-r-2 border-black p-0.5 text-center">{item.unitType === 'case' ? item.quantity : 0}</td>
-                            <td className="border-r-2 border-black p-0.5 text-right">{formatCurrency(item.price)}</td>
-                            <td className="p-0.5 text-right">{formatCurrency(item.total)}</td>
+                            <td className="border-r-2 border-black py-0.5 px-0.5 text-center">{index + 1}</td>
+                            <td className="border-r-2 border-black py-0.5 px-1 uppercase">{item.productName}</td>
+                            <td className="border-r-2 border-black py-0.5 px-0.5 text-center">{item.HSN || item.productId?.HSN || '-'}</td>
+                            <td className="border-r-2 border-black py-0.5 px-0.5 text-center">{item.unitType === 'single' ? item.quantity : 0}</td>
+                            <td className="border-r-2 border-black py-0.5 px-0.5 text-center">{item.unitType === 'case' ? item.quantity : 0}</td>
+                            <td className="border-r-2 border-black py-0.5 px-1 text-right">{formatCurrency(item.price)}</td>
+                            <td className="py-0.5 px-1 text-right">{formatCurrency(item.total)}</td>
                         </tr>
                     ))}
                     {/* Fill extra empty rows */}
                     {[...Array(Math.max(0, 5 - transaction.products.length))].map((_, i) => (
                         <tr key={`empty-${i}`} className="h-4">
-                            <td className="border-r-2 border-black p-0.5"></td>
-                            <td className="border-r-2 border-black p-0.5"></td>
-                            <td className="border-r-2 border-black p-0.5"></td>
-                            <td className="border-r-2 border-black p-0.5"></td>
-                            <td className="border-r-2 border-black p-0.5"></td>
-                            <td className="border-r-2 border-black p-0.5"></td>
-                            <td className="p-0.5"></td>
+                            <td className="border-r-2 border-black py-0.5"></td>
+                            <td className="border-r-2 border-black py-0.5"></td>
+                            <td className="border-r-2 border-black py-0.5"></td>
+                            <td className="border-r-2 border-black py-0.5"></td>
+                            <td className="border-r-2 border-black py-0.5"></td>
+                            <td className="border-r-2 border-black py-0.5"></td>
+                            <td className="py-0.5"></td>
                         </tr>
                     ))}
                     {/* Totals row */}
                     <tr className="border-t-2 border-black font-bold">
-                        <td colSpan={3} className="border-r-2 border-black"></td>
-                        <td className="border-r-2 border-black p-0.5 text-center">
+                        <td colSpan={3} className="border-r-2 border-black py-0.5"></td>
+                        <td className="border-r-2 border-black py-0.5 px-0.5 text-center">
                             {transaction.products.reduce((acc, item) => acc + (item.unitType === 'single' ? item.quantity : 0), 0)}
                         </td>
-                        <td className="border-r-2 border-black p-0.5 text-center">
+                        <td className="border-r-2 border-black py-0.5 px-0.5 text-center">
                             {transaction.products.reduce((acc, item) => acc + (item.unitType === 'case' ? item.quantity : 0), 0)}
                         </td>
-                        <td className="border-r-2 border-black p-0.5 text-center bg-gray-50 text-[6pt] uppercase">Sub Total</td>
-                        <td className="p-0.5 text-right">{formatCurrency(transaction.subtotal)}</td>
+                        <td className="border-r-2 border-black py-0.5 px-0.5 text-center bg-gray-50 text-[6pt] uppercase">Sub Total</td>
+                        <td className="py-0.5 px-1 text-right">{formatCurrency(transaction.subtotal)}</td>
                     </tr>
                 </tbody>
             </table>
 
             {/* Bottom section */}
             <div className="grid grid-cols-2 border-x-2 border-black mb-0">
-                <div className="border-r-2 border-black p-2 flex flex-col justify-center">
+                <div className="border-r-2 border-black p-1.5 flex flex-col justify-center min-h-[45px]">
                     <p className="font-bold uppercase text-[7pt] mb-1 underline">Total in Words:-</p>
-                    <p className="font-bold text-[7pt]">
+                    <p className="font-bold text-[7pt] leading-tight flex-1 flex items-center">
                         {toWords(transaction.totalAmount)}
                     </p>
                 </div>
                 <div className="p-0 font-bold uppercase text-[7pt]">
                     <div className="grid grid-cols-2 border-b border-black">
-                        <div className="border-r-2 border-black p-0.5 pl-2">SGST (2.5%)</div>
-                        <div className="p-0.5 text-right">{formatCurrency(transaction.sgst)}</div>
+                        <div className="border-r-2 border-black py-0.5 pl-2 flex items-center">SGST (2.5%)</div>
+                        <div className="py-0.5 px-1 text-right flex items-center justify-end">{formatCurrency(transaction.sgst)}</div>
                     </div>
                     <div className="grid grid-cols-2 border-b border-black">
-                        <div className="border-r-2 border-black p-0.5 pl-2">CGST (2.5%)</div>
-                        <div className="p-0.5 text-right">{formatCurrency(transaction.cgst)}</div>
+                        <div className="border-r-2 border-black py-0.5 pl-2 flex items-center">CGST (2.5%)</div>
+                        <div className="py-0.5 px-1 text-right flex items-center justify-end">{formatCurrency(transaction.cgst)}</div>
                     </div>
                     <div className="grid grid-cols-2 border-b border-black bg-blue-50/20 font-bold">
-                        <div className="border-r-2 border-black p-0.5 pl-2">Original Amount</div>
-                        <div className="p-0.5 text-right font-bold">{formatCurrency((transaction.totalAmount || 0) + (transaction.discount || 0))}</div>
+                        <div className="border-r-2 border-black py-0.5 pl-2 flex items-center">Original Amount</div>
+                        <div className="py-0.5 px-1 text-right font-bold flex items-center justify-end">{formatCurrency((transaction.totalAmount || 0) + (transaction.discount || 0))}</div>
                     </div>
                     {transaction.discount > 0 && (
                         <div className="grid grid-cols-2 border-b border-black text-green-800">
-                            <div className="border-r-2 border-black p-0.5 pl-2">Discount Amount (-)</div>
-                            <div className="p-0.5 text-right">-{formatCurrency(transaction.discount)}</div>
+                            <div className="border-r-2 border-black py-0.5 pl-2 flex items-center">Discount Amount (-)</div>
+                            <div className="py-0.5 px-1 text-right flex items-center justify-end">-{formatCurrency(transaction.discount)}</div>
                         </div>
                     )}
                     <div className="grid grid-cols-2 border-b-2 border-black bg-gray-50">
-                        <div className="border-r-2 border-black p-0.5 pl-2">Total</div>
-                        <div className="p-0.5 text-right text-[8pt]">{formatCurrency(transaction.totalAmount)}</div>
+                        <div className="border-r-2 border-black py-0.5 pl-2 flex items-center text-[7pt]">Total</div>
+                        <div className="py-0.5 px-1 text-right text-[7.5pt] flex items-center justify-end">{formatCurrency(transaction.totalAmount)}</div>
                     </div>
                     <div className="grid grid-cols-2 bg-gray-100">
-                        <div className="border-r-2 border-black p-0.5 pl-2">Total (Round)</div>
-                        <div className="p-0.5 text-right text-[9pt]">{Math.round(transaction.totalAmount)}</div>
+                        <div className="border-r-2 border-black py-0.5 pl-2 flex items-center text-[7.5pt]">Total (Round)</div>
+                        <div className="py-0.5 px-1 text-right text-[8.5pt] flex items-center justify-end">{Math.round(transaction.totalAmount)}</div>
                     </div>
                 </div>
             </div>
@@ -233,7 +232,7 @@ export const Invoice = React.forwardRef(({ transaction, businessDetails }, ref) 
                     position: relative;
                     overflow: hidden;
                     box-sizing: border-box;
-                    padding: 10mm;
+                    padding: 8mm;
                 }
                 
                 @media print {
@@ -247,20 +246,7 @@ export const Invoice = React.forwardRef(({ transaction, businessDetails }, ref) 
                     .invoice-container {
                         margin: 0;
                         box-shadow: none;
-                        page-break-after: avoid;
-                        page-break-before: avoid;
-                        padding: 10mm;
-                    }
-                    
-                    * {
-                        -webkit-print-color-adjust: exact !important;
-                        print-color-adjust: exact !important;
-                    }
-                }
-                
-                @media screen {
-                    .invoice-container {
-                        box-shadow: 0 0 10px rgba(0,0,0,0.1);
+                        padding: 8mm;
                     }
                 }
             `}</style>
@@ -268,20 +254,22 @@ export const Invoice = React.forwardRef(({ transaction, businessDetails }, ref) 
             <div ref={ref} className="invoice-container">
                 {/* Customer Copy - Top Half */}
                 <div style={{
-                    height: '138mm',
-                    padding: '2mm',
+                    height: '140mm',
+                    padding: '1mm',
                     boxSizing: 'border-box',
-                    borderBottom: '2px dashed #9ca3af',
-                    marginBottom: '1mm'
+                    borderBottom: '1px dashed #000',
+                    marginBottom: '2mm',
+                    position: 'relative'
                 }}>
                     <InvoiceContent copyLabel="CUSTOMER COPY" />
                 </div>
 
                 {/* Official Copy - Bottom Half */}
                 <div style={{
-                    height: '138mm',
-                    padding: '2mm',
-                    boxSizing: 'border-box'
+                    height: '140mm',
+                    padding: '1mm',
+                    boxSizing: 'border-box',
+                    position: 'relative'
                 }}>
                     <InvoiceContent copyLabel="OFFICIAL COPY" />
                 </div>

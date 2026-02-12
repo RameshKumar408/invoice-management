@@ -75,7 +75,7 @@ export default function ContactsPage() {
                         <TableHead className="font-bold">GSTIN</TableHead>
                         <TableHead className="font-bold">Code Name</TableHead>
                         <TableHead className="font-bold">Contact Info</TableHead>
-                        <TableHead className="font-bold">Balance</TableHead>
+                        {/* <TableHead className="font-bold">Balance</TableHead> */}
                         <TableHead className="font-bold">Actions</TableHead>
                     </TableRow>
                 </TableHeader>
@@ -108,7 +108,14 @@ export default function ContactsPage() {
                                 <div className="space-y-1">
                                     <div className="flex items-center space-x-1 text-sm">
                                         <Phone className="h-3 w-3" />
-                                        <span>{contact.phone}</span>
+                                        <a
+                                            href={`https://wa.me/${contact.phone?.replace(/[^0-9]/g, '')}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="hover:text-primary hover:underline"
+                                        >
+                                            {contact.phone}
+                                        </a>
                                     </div>
                                     {contact.email && (
                                         <div className="flex items-center space-x-1 text-sm text-muted-foreground">
@@ -118,7 +125,7 @@ export default function ContactsPage() {
                                     )}
                                 </div>
                             </TableCell>
-                            <TableCell>
+                            {/* <TableCell>
                                 <div className={`font-medium ${contact.currentBalance > 0 ? 'text-green-500' :
                                     contact.currentBalance < 0 ? 'text-red-500' : ''
                                     }`}>
@@ -127,7 +134,7 @@ export default function ContactsPage() {
                                 <div className="text-sm text-muted-foreground">
                                     Limit: RS {Number(contact.creditLimit || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </div>
-                            </TableCell>
+                            </TableCell> */}
                             <TableCell>
                                 <div className="flex items-center space-x-2">
                                     <Link href={`/contacts/${contact._id}/edit`}>

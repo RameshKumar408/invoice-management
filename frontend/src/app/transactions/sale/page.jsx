@@ -244,16 +244,16 @@ export default function AddSalePage() {
             <div className="max-w-4xl mx-auto space-y-6">
                 {/* Header */}
                 <FadeIn delay={0.1}>
-                    <div className="flex items-center gap-4">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
                         <ScaleOnHover>
-                            <Button variant="outline" onClick={() => router.back()}>
+                            <Button variant="outline" onClick={() => router.back()} size="sm">
                                 <ArrowLeft className="mr-2 h-4 w-4" />
                                 Back
                             </Button>
                         </ScaleOnHover>
                         <div>
-                            <h1 className="text-3xl font-bold tracking-tight">Invoice</h1>
-                            <p className="text-muted-foreground">
+                            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Invoice</h1>
+                            <p className="text-xs sm:text-sm text-muted-foreground">
                                 Record a new sale transaction for your customers
                             </p>
                         </div>
@@ -283,22 +283,23 @@ export default function AddSalePage() {
                         {/* Customer & Payment Info */}
                         <SlideIn direction="up" delay={0.2}>
                             <Card>
-                                <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                                <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 space-y-0">
                                     <div className="space-y-1.5">
-                                        <CardTitle className="flex items-center gap-2">
+                                        <CardTitle className="text-lg sm:text-xl flex items-center gap-2">
                                             <User className="h-5 w-5" />
                                             Customer & Payment Information
                                         </CardTitle>
-                                        <CardDescription>
+                                        <CardDescription className="text-xs sm:text-sm">
                                             Select the customer and payment details
                                         </CardDescription>
                                     </div>
-                                    <ScaleOnHover>
+                                    <ScaleOnHover className="w-full sm:w-auto">
                                         <Button
                                             type="button"
                                             variant="outline"
                                             size="sm"
                                             onClick={() => router.push('/contacts/new')}
+                                            className="w-full sm:w-auto"
                                         >
                                             <Plus className="mr-2 h-4 w-4" />
                                             Add Customer
@@ -405,19 +406,19 @@ export default function AddSalePage() {
                                         Add products to this sale transaction
                                     </CardDescription>
                                 </CardHeader>
-                                <CardContent className="space-y-4">
+                                <CardContent className="space-y-4 p-4 sm:p-6">
                                     {fields.map((field, index) => {
                                         const selectedProduct = products.find(
                                             p => p._id === form.watch(`products.${index}.productId`)
                                         );
 
                                         return (
-                                            <div key={field.id} className="grid gap-4 md:grid-cols-8 items-end p-4 border rounded-lg relative group transition-all duration-300 hover:shadow-md">
+                                            <div key={field.id} className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 items-end p-3 sm:p-4 border rounded-lg relative group transition-all duration-300 hover:shadow-md bg-card/50">
                                                 <FormField
                                                     control={form.control}
                                                     name={`products.${index}.productId`}
                                                     render={({ field }) => (
-                                                        <FormItem className="flex flex-col">
+                                                        <FormItem className="flex flex-col lg:col-span-3 min-w-0">
                                                             <FormLabel className="flex items-center gap-1">
                                                                 <Package className="h-4 w-4" />
                                                                 Product *
@@ -446,7 +447,7 @@ export default function AddSalePage() {
                                                     control={form.control}
                                                     name={`products.${index}.unitType`}
                                                     render={({ field }) => (
-                                                        <FormItem>
+                                                        <FormItem className="lg:col-span-1">
                                                             <FormLabel>Type *</FormLabel>
                                                             <Select onValueChange={field.onChange} defaultValue={field.value}>
                                                                 <FormControl>
@@ -468,7 +469,7 @@ export default function AddSalePage() {
                                                     control={form.control}
                                                     name={`products.${index}.quantity`}
                                                     render={({ field }) => (
-                                                        <FormItem>
+                                                        <FormItem className="lg:col-span-1">
                                                             <FormLabel>Quantity *</FormLabel>
                                                             <FormControl>
                                                                 <Input
@@ -489,7 +490,7 @@ export default function AddSalePage() {
                                                     control={form.control}
                                                     name={`products.${index}.incPrice`}
                                                     render={({ field }) => (
-                                                        <FormItem>
+                                                        <FormItem className="lg:col-span-2">
                                                             <FormLabel>Inc. Price</FormLabel>
                                                             <FormControl>
                                                                 <Input
@@ -514,7 +515,7 @@ export default function AddSalePage() {
                                                     control={form.control}
                                                     name={`products.${index}.price`}
                                                     render={({ field }) => (
-                                                        <FormItem>
+                                                        <FormItem className="lg:col-span-2">
                                                             <FormLabel>Price *</FormLabel>
                                                             <FormControl>
                                                                 <Input
@@ -535,14 +536,14 @@ export default function AddSalePage() {
                                                     )}
                                                 />
 
-                                                <div className="space-y-2">
+                                                <div className="space-y-2 lg:col-span-2">
                                                     <Label>Total</Label>
-                                                    <div className="h-10 flex items-center px-3 py-2 border rounded-md bg-muted font-medium">
+                                                    <div className="h-10 flex items-center px-3 py-2 border rounded-md bg-muted font-medium overflow-hidden truncate">
                                                         RS {Number(form.watch(`products.${index}.quantity`) * form.watch(`products.${index}.price`)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                                     </div>
                                                 </div>
 
-                                                <div className="flex justify-end">
+                                                <div className="flex justify-end lg:col-span-1">
                                                     <ScaleOnHover>
                                                         <Button
                                                             type="button"
@@ -578,16 +579,17 @@ export default function AddSalePage() {
                                             </FadeIn>
                                         )}
 
-                                    <div className="flex justify-end">
-                                        <ScaleOnHover>
+                                    <div className="flex justify-center sm:justify-end">
+                                        <ScaleOnHover className="w-full sm:w-auto">
                                             <Button
                                                 type="button"
                                                 variant="outline"
                                                 size="sm"
                                                 onClick={() => append({ productId: '', quantity: 1, price: 0, incPrice: 0, unitType: 'case' })}
+                                                className="w-full sm:w-auto border-dashed border-2 hover:border-primary hover:bg-primary/5 transition-all"
                                             >
                                                 <Plus className="mr-2 h-4 w-4" />
-                                                Add Product
+                                                Add Another Product
                                             </Button>
                                         </ScaleOnHover>
                                     </div>
@@ -613,16 +615,16 @@ export default function AddSalePage() {
                                         </div>
 
                                         {/* Discount Input Field */}
-                                        <div className="flex justify-between items-center py-2 border-y border-dashed bg-slate-50/50 px-2 rounded">
+                                        <div className="flex justify-between items-center py-2 border-y border-dashed bg-muted/40 px-2 rounded">
                                             <div className="flex items-center gap-2">
-                                                <span className="font-medium">Discount Amount (-):</span>
+                                                <span className="font-medium text-sm sm:text-base">Discount Amount (-):</span>
                                             </div>
-                                            <div className="w-32">
+                                            <div className="w-24 sm:w-32">
                                                 <FormField
                                                     control={form.control}
                                                     name="discount"
                                                     render={({ field }) => (
-                                                        <FormItem className="space-y-0">
+                                                        <FormItem className="space-y-0 text-right">
                                                             <FormControl>
                                                                 <Input
                                                                     type="number"
@@ -630,7 +632,7 @@ export default function AddSalePage() {
                                                                     min="0"
                                                                     {...field}
                                                                     onChange={(e) => field.onChange(Number(e.target.value))}
-                                                                    className="text-right h-9 transition-all duration-300 focus:ring-2 focus:ring-primary/50 bg-white"
+                                                                    className="text-right h-9 transition-all duration-300 focus:ring-2 focus:ring-primary/50 bg-background"
                                                                     placeholder="0.00"
                                                                 />
                                                             </FormControl>
@@ -642,16 +644,16 @@ export default function AddSalePage() {
                                         </div>
 
                                         {/* Initial Payment Field */}
-                                        <div className="flex justify-between items-center py-2 border-b border-dashed bg-green-50/50 px-2 rounded">
+                                        <div className="flex justify-between items-center py-2 border-b border-dashed bg-green-500/10 px-2 rounded">
                                             <div className="flex items-center gap-2">
-                                                <span className="font-medium text-green-700">Initial Payment:</span>
+                                                <span className="font-medium text-sm sm:text-base text-green-700 dark:text-green-400">Initial Payment:</span>
                                             </div>
-                                            <div className="w-32">
+                                            <div className="w-24 sm:w-32">
                                                 <FormField
                                                     control={form.control}
                                                     name="initialPayment"
                                                     render={({ field }) => (
-                                                        <FormItem className="space-y-0">
+                                                        <FormItem className="space-y-0 text-right">
                                                             <FormControl>
                                                                 <Input
                                                                     type="number"
@@ -659,7 +661,7 @@ export default function AddSalePage() {
                                                                     min="0"
                                                                     {...field}
                                                                     onChange={(e) => field.onChange(Number(e.target.value))}
-                                                                    className="text-right h-9 transition-all duration-300 focus:ring-2 focus:ring-green-500/50 bg-white border-green-200"
+                                                                    className="text-right h-9 transition-all duration-300 focus:ring-2 focus:ring-green-500/50 bg-background border-green-500/30"
                                                                     placeholder="0.00"
                                                                 />
                                                             </FormControl>
@@ -671,8 +673,8 @@ export default function AddSalePage() {
                                         </div>
 
                                         <div className="flex justify-between items-center pt-2 border-t">
-                                            <span className="text-lg font-bold">Total Amount (Payable):</span>
-                                            <span className="text-3xl font-bold text-green-600">
+                                            <span className="text-base sm:text-lg font-bold">Total Amount (Payable):</span>
+                                            <span className="text-2xl sm:text-3xl font-bold text-green-600">
                                                 RS {Number(calculateAmounts().total).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                             </span>
                                         </div>
@@ -723,15 +725,16 @@ export default function AddSalePage() {
                             Please select the payment status for this sale.
                         </DialogDescription>
                     </DialogHeader>
-                    <div className="grid grid-cols-2 gap-4 py-4">
+                    <div className="flex flex-col sm:grid sm:grid-cols-2 gap-3 py-4">
                         <Button
-                            className="bg-green-600 hover:bg-green-700"
+                            className="bg-green-600 hover:bg-green-700 h-12 sm:h-auto order-1 sm:order-none"
                             onClick={() => processSale('completed')}
                         >
                             Payment Completed
                         </Button>
                         <Button
                             variant="destructive"
+                            className="h-12 sm:h-auto order-2 sm:order-none"
                             onClick={() => processSale('pending')}
                         >
                             Payment Pending
