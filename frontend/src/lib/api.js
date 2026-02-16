@@ -202,6 +202,11 @@ class ApiClient {
         return response.data;
     }
 
+    async updateTransactionPrintStatus(id, isPrinted = true) {
+        const response = await this.instance.patch(`/transactions/${id}/print`, { isPrinted });
+        return response.data;
+    }
+
     // Report methods
     async getDashboard() {
         const response = await this.instance.get('/reports/dashboard');

@@ -113,6 +113,18 @@ export default function TransactionDetailPage({ params }) {
     const handlePrint = useReactToPrint({
         contentRef: invoiceRef,
         documentTitle: transaction ? `Invoice-${transaction.invoiceNumber || transaction._id}` : 'Invoice',
+        onAfterPrint: async () => {
+            if (id && !transaction?.isPrinted) {
+                try {
+                    const response = await api.updateTransactionPrintStatus(id, true);
+                    if (response.success) {
+                        setTransaction(prev => ({ ...prev, isPrinted: true }));
+                    }
+                } catch (err) {
+                    console.error('Error updating print status:', err);
+                }
+            }
+        }
     });
 
     const generatePDFBlob = async () => {
@@ -199,63 +211,47 @@ export default function TransactionDetailPage({ params }) {
             const fileName = `Invoice-${transaction.invoiceNumber || transaction._id}.pdf`;
             const pdfFile = new File([blob], fileName, { type: 'application/pdf' });
 
-            // Helper for delay
-            const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+            const message = `*Invoice from ${BUSINESS_DETAILS.name}*\n\n` +
+                `*Invoice No:* ${transaction.invoiceNumber || transaction._id}\n` +
+                `*Total Amount:* RS ${Number(transaction.totalAmount).toLocaleString('en-IN')}\n\n` +
+                `Thank you for your business!`;
 
-            // 1. If "Forward/Share" is clicked (Generic link to pick contact in WhatsApp)
-            if (forceShare && !cleanNumber) {
-                // Always download first
-                const url = URL.createObjectURL(blob);
-                const link = document.body.appendChild(document.createElement('a'));
-                link.href = url;
-                link.download = fileName;
-                link.click();
-                link.remove();
-                URL.revokeObjectURL(url);
+            // Try Web Share API (Best for mobile, allows direct sharing of the file)
+            if (navigator.share && navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+                try {
+                    await navigator.share({
+                        title: `Invoice ${transaction.invoiceNumber || transaction._id}`,
+                        text: message,
+                        files: [pdfFile],
+                    });
 
-                const message = `*Invoice from ${BUSINESS_DETAILS.name}*\n\n` +
-                    `Hello,\n` +
-                    `I am sending the invoice for the transaction. I have downloaded the PDF for you. Please attach it and send it.\n\n` +
-                    `*Invoice No:* ${transaction.invoiceNumber || transaction._id}\n` +
-                    `*Total Amount:* RS ${Number(transaction.totalAmount).toLocaleString('en-IN')}\n`;
-
-                // WhatsApp API link without number opens contact picker
-                const waUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
-
-                // Wait for 3 seconds as requested
-                await wait(3000);
-                window.open(waUrl, '_blank');
+                    setIsWhatsAppDialogOpen(false);
+                    setShowCustomInput(false);
+                    setCustomNumber('');
+                    return;
+                } catch (shareError) {
+                    // If user cancelled, don't show error/fallback
+                    if (shareError.name === 'AbortError') return;
+                    console.error('Share API failed:', shareError);
+                    // Fallback to wa.me if share fails
+                }
             }
-            // 2. Direct Message to a specific number
-            else if (cleanNumber) {
-                // Download it first so they have it ready to attach
-                const url = URL.createObjectURL(blob);
-                const link = document.body.appendChild(document.createElement('a'));
-                link.href = url;
-                link.download = fileName;
-                link.click();
-                link.remove();
-                URL.revokeObjectURL(url);
 
-                const message = `*Invoice from ${BUSINESS_DETAILS.name}*\n\n` +
-                    `Hello ${contact?.name || ''},\n` +
-                    `I am sending the invoice for your transaction. I have downloaded the PDF for you. Please attach it and send it to this number.\n\n` +
-                    `*Invoice No:* ${transaction.invoiceNumber || transaction._id}\n` +
-                    `*Total Amount:* RS ${Number(transaction.totalAmount).toLocaleString('en-IN')}\n`;
+            // Fallback: Use WhatsApp wa.me link (Cannot attach files directly)
+            // Note: Since we can't attach files via wa.me, we'll inform the user
+            const waMessage = message + `\n\n(Attachment: ${fileName})`;
+            const waUrl = cleanNumber
+                ? `https://wa.me/${cleanNumber}?text=${encodeURIComponent(waMessage)}`
+                : `https://wa.me/?text=${encodeURIComponent(waMessage)}`;
 
-                const waUrl = `https://wa.me/${cleanNumber}?text=${encodeURIComponent(message)}`;
-
-                // Wait for 3 seconds as requested
-                await wait(3000);
-                window.open(waUrl, '_blank');
-            }
+            window.open(waUrl, '_blank');
 
             setIsWhatsAppDialogOpen(false);
             setShowCustomInput(false);
             setCustomNumber('');
         } catch (error) {
             console.error('Error sharing PDF:', error);
-            alert('Failed to generate or share PDF');
+            alert('Failed to share PDF');
         } finally {
             setIsSharing(false);
         }
@@ -403,6 +399,11 @@ export default function TransactionDetailPage({ params }) {
                             <Badge className={`px-2 py-0.5 text-[10px] sm:text-xs font-bold leading-none ${getStatusColor(transaction.status)}`}>
                                 {transaction.status.toUpperCase()}
                             </Badge>
+                            {transaction.isPrinted && (
+                                <Badge className="px-2 py-0.5 text-[10px] sm:text-xs font-bold leading-none bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400">
+                                    PRINTED
+                                </Badge>
+                            )}
                         </div>
                     </div>
                 </div>

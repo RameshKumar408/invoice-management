@@ -135,6 +135,10 @@ const transactionSchema = new mongoose.Schema({
   invoiceNumber: {
     type: String,
     trim: true
+  },
+  isPrinted: {
+    type: Boolean,
+    default: false
   }
 }, {
   timestamps: true

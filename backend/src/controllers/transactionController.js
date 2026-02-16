@@ -14,6 +14,7 @@ const getTransactions = asyncHandler(async (req, res) => {
     endDate,
     contactId,
     status,
+    isPrinted,
     page = 1,
     limit = 10
   } = req.query;
@@ -41,6 +42,10 @@ const getTransactions = asyncHandler(async (req, res) => {
 
   if (status && ['pending', 'completed', 'cancelled'].includes(status)) {
     filter.status = status;
+  }
+
+  if (isPrinted !== undefined && isPrinted !== '') {
+    filter.isPrinted = isPrinted === 'true';
   }
 
   // Calculate pagination
@@ -433,6 +438,35 @@ const updateTransactionStatus = asyncHandler(async (req, res) => {
 });
 
 /**
+ * @desc    Update transaction print status
+ * @route   PATCH /api/transactions/:id/print
+ * @access  Private
+ */
+const updatePrintStatus = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { isPrinted } = req.body;
+
+  const transaction = await Transaction.findOneAndUpdate(
+    { _id: id, businessId: req.businessId },
+    { isPrinted: isPrinted !== undefined ? isPrinted : true },
+    { new: true, runValidators: true }
+  );
+
+  if (!transaction) {
+    return res.status(404).json({
+      success: false,
+      message: 'Transaction not found'
+    });
+  }
+
+  res.json({
+    success: true,
+    message: 'Transaction print status updated successfully',
+    data: { transaction }
+  });
+});
+
+/**
  * @desc    Get transaction summary/statistics
  * @route   GET /api/transactions/summary
  * @access  Private
@@ -577,6 +611,7 @@ module.exports = {
   getSales,
   getPurchases,
   updateTransactionStatus,
+  updatePrintStatus,
   getTransactionSummary,
   addPayment
 };

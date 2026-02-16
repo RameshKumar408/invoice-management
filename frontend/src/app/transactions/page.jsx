@@ -19,9 +19,24 @@ import {
     Calendar,
     DollarSign,
     TrendingUp,
-    TrendingDown
+    TrendingDown,
+    Printer
 } from 'lucide-react';
 import { api } from '@/lib/api';
+import { useReactToPrint } from 'react-to-print';
+import { Invoice } from '@/components/Invoice';
+
+const BUSINESS_DETAILS = {
+    name: 'SIVA LAKSHMI TRADERS',
+    address: '11/10, Pandeeswara nagar, Pannaimara stop, THIRUMANGALAM, MDU-625706.',
+    phone: '8072651414 , 8939992847',
+    gstin: '33DCFPA7258Q1Z7',
+    bank: {
+        name: 'BANK OF BARODA',
+        accountNo: '59440200000183',
+        ifsc: 'IDIB000T145'
+    }
+};
 
 export default function TransactionsPage() {
     const [transactions, setTransactions] = useState([]);
@@ -31,11 +46,40 @@ export default function TransactionsPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [typeFilter, setTypeFilter] = useState('all');
     const [statusFilter, setStatusFilter] = useState('all');
+    const [printFilter, setPrintFilter] = useState('all');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
+    const [transactionToPrint, setTransactionToPrint] = useState(null);
     const tableRef = useRef(null);
+    const printRef = useRef(null);
+
+    const handlePrint = useReactToPrint({
+        contentRef: printRef,
+        documentTitle: transactionToPrint ? `Invoice-${transactionToPrint.invoiceNumber || transactionToPrint._id}` : 'Invoice',
+        onAfterPrint: async () => {
+            if (transactionToPrint && !transactionToPrint.isPrinted) {
+                try {
+                    const response = await api.updateTransactionPrintStatus(transactionToPrint._id, true);
+                    if (response.success) {
+                        setTransactions(prev => prev.map(t =>
+                            t._id === transactionToPrint._id ? { ...t, isPrinted: true } : t
+                        ));
+                    }
+                } catch (err) {
+                    console.error('Error updating print status:', err);
+                }
+            }
+            setTransactionToPrint(null);
+        }
+    });
+
+    useEffect(() => {
+        if (transactionToPrint) {
+            handlePrint();
+        }
+    }, [transactionToPrint]);
 
     const scrollToTable = () => {
         if (window.innerWidth < 768) {
@@ -50,6 +94,7 @@ export default function TransactionsPage() {
 
             if (typeFilter !== 'all') params.type = typeFilter;
             if (statusFilter !== 'all') params.status = statusFilter;
+            if (printFilter !== 'all') params.isPrinted = printFilter;
             if (startDate) params.startDate = startDate;
             if (endDate) params.endDate = endDate;
 
@@ -121,7 +166,7 @@ export default function TransactionsPage() {
     useEffect(() => {
         fetchTransactions();
         fetchSummary();
-    }, [page, typeFilter, statusFilter, startDate, endDate]);
+    }, [page, typeFilter, statusFilter, printFilter, startDate, endDate]);
 
     const filteredTransactions = transactions.filter(transaction => {
         const searchLower = searchTerm.toLowerCase();
@@ -288,6 +333,7 @@ export default function TransactionsPage() {
                                     setEndDate('');
                                     setTypeFilter('all');
                                     setStatusFilter('all');
+                                    setPrintFilter('all');
                                     setPage(1);
                                 }}
                             >
@@ -335,6 +381,20 @@ export default function TransactionsPage() {
                                         <SelectItem value="completed">Completed</SelectItem>
                                         <SelectItem value="pending">Pending</SelectItem>
                                         <SelectItem value="cancelled">Cancelled</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium">Print Status</label>
+                                <Select value={printFilter} onValueChange={setPrintFilter}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="All" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All</SelectItem>
+                                        <SelectItem value="true">Printed</SelectItem>
+                                        <SelectItem value="false">Not Printed</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -440,6 +500,7 @@ export default function TransactionsPage() {
                                                 <TableHead className="font-bold">Amount</TableHead>
                                                 <TableHead className="font-bold">Balance</TableHead>
                                                 <TableHead className="font-bold">Status</TableHead>
+                                                <TableHead className="font-bold">Print Status</TableHead>
                                                 <TableHead className="font-bold">Payment</TableHead>
                                                 <TableHead className="text-right font-bold">Actions</TableHead>
                                             </TableRow>
@@ -488,15 +549,36 @@ export default function TransactionsPage() {
                                                             {transaction.status}
                                                         </Badge>
                                                     </TableCell>
+                                                    <TableCell>
+                                                        {transaction.isPrinted ? (
+                                                            <Badge className="bg-blue-100 text-blue-800 border-blue-200">
+                                                                Printed
+                                                            </Badge>
+                                                        ) : (
+                                                            <Badge variant="outline" className="text-muted-foreground border-slate-200">
+                                                                Not Printed
+                                                            </Badge>
+                                                        )}
+                                                    </TableCell>
                                                     <TableCell className="capitalize">
                                                         {transaction.paymentMethod}
                                                     </TableCell>
                                                     <TableCell className="text-right">
-                                                        <Button variant="ghost" size="sm" asChild>
-                                                            <Link href={`/transactions/${transaction._id}`}>
-                                                                <Eye className="h-4 w-4" />
-                                                            </Link>
-                                                        </Button>
+                                                        <div className="flex justify-end gap-2">
+                                                            <Button
+                                                                variant="outline"
+                                                                size="sm"
+                                                                onClick={() => setTransactionToPrint(transaction)}
+                                                                title="Print Invoice"
+                                                            >
+                                                                <Printer className="h-4 w-4" />
+                                                            </Button>
+                                                            <Button variant="ghost" size="sm" asChild>
+                                                                <Link href={`/transactions/${transaction._id}`}>
+                                                                    <Eye className="h-4 w-4" />
+                                                                </Link>
+                                                            </Button>
+                                                        </div>
                                                     </TableCell>
                                                 </TableRow>
                                             ))}
@@ -532,6 +614,18 @@ export default function TransactionsPage() {
                         )}
                     </CardContent>
                 </Card>
+            </div>
+
+            {/* Hidden printable area */}
+            <div style={{ display: 'none' }}>
+                <div ref={printRef}>
+                    {transactionToPrint && (
+                        <Invoice
+                            transaction={transactionToPrint}
+                            businessDetails={BUSINESS_DETAILS}
+                        />
+                    )}
+                </div>
             </div>
         </Layout>
     );

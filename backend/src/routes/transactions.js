@@ -6,6 +6,7 @@ const {
   getSales,
   getPurchases,
   updateTransactionStatus,
+  updatePrintStatus,
   getTransactionSummary,
   addPayment
 } = require('../controllers/transactionController');
@@ -34,6 +35,7 @@ router.get('/purchases', getPurchases);
 // Individual transaction routes
 router.get('/:id', getTransaction);
 router.patch('/:id/status', updateTransactionStatusValidation, validateRequest, updateTransactionStatus);
+router.patch('/:id/print', updatePrintStatus);
 router.post('/:id/payments', addPayment);
 
 module.exports = router;
