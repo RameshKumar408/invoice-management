@@ -88,8 +88,8 @@ export default function AddSalePage() {
         const fetchData = async () => {
             try {
                 const [customersResponse, productsResponse] = await Promise.all([
-                    api.getContacts({ type: 'customer' }),
-                    api.getProducts()
+                    api.getContacts({ type: 'customer', limit: 1000 }),
+                    api.getProducts({ limit: 1000 })
                 ]);
 
                 if (customersResponse.success) {
@@ -111,17 +111,44 @@ export default function AddSalePage() {
     // Update price when product is selected
     const handleProductChange = (index, productId) => {
         const selectedProduct = products.find(p => p._id === productId);
+        const customerId = form.getValues('customerId');
+        const selectedCustomer = customers.find(c => c._id === customerId);
+
         if (selectedProduct) {
-            const price = selectedProduct.price || 0;
+            let incPrice;
             const cgst = selectedProduct.cgst || 0;
             const sgst = selectedProduct.sgst || 0;
             const totalTaxRate = cgst + sgst;
-            const incPrice = price * (1 + totalTaxRate / 100);
 
-            form.setValue(`products.${index}.price`, Number(price.toFixed(2)));
-            form.setValue(`products.${index}.incPrice`, Number(incPrice.toFixed(2)));
+            // Check if customer has a custom special price for this product
+            const customSpecial = selectedCustomer?.customProductPrices?.find(cp => cp.productId === productId || cp.productId?._id === productId);
+
+            if (customSpecial && customSpecial.inclusivePrice) {
+                incPrice = customSpecial.inclusivePrice;
+                const basePrice = incPrice / (1 + totalTaxRate / 100);
+                form.setValue(`products.${index}.price`, Number(basePrice.toFixed(2)));
+                form.setValue(`products.${index}.incPrice`, Number(incPrice.toFixed(2)));
+            } else {
+                incPrice = selectedProduct.price || 0;
+                const basePrice = incPrice / (1 + totalTaxRate / 100);
+                form.setValue(`products.${index}.price`, Number(basePrice.toFixed(2)));
+                form.setValue(`products.${index}.incPrice`, Number(incPrice.toFixed(2)));
+            }
         }
     };
+
+    // Watch for customer change to update all product prices
+    const watchCustomerId = form.watch('customerId');
+    useEffect(() => {
+        const productFields = form.getValues('products');
+        if (productFields && productFields.length > 0) {
+            productFields.forEach((field, index) => {
+                if (field.productId) {
+                    handleProductChange(index, field.productId);
+                }
+            });
+        }
+    }, [watchCustomerId, products, customers]);
 
     // Handle Inclusive Price change
     const onIncPriceChange = (index, incPrice) => {

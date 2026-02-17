@@ -12,7 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { apiClient } from '@/lib/api';
-import { ArrowLeft, Save, User, Phone, Mail, MapPin, FileText, AlertCircle, Hash } from 'lucide-react';
+import { ArrowLeft, Save, User, Phone, Mail, MapPin, FileText, AlertCircle, Hash, Plus } from 'lucide-react';
 import { FadeIn, SlideIn, FormFieldAnimation, ScaleOnHover } from '@/components/animations';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -36,6 +36,10 @@ const contactSchema = z.object({
         country: z.string().optional(),
     }).optional(),
     notes: z.string().optional(),
+    customProductPrices: z.array(z.object({
+        productId: z.string(),
+        inclusivePrice: z.number().or(z.string()).optional()
+    })).optional(),
 });
 
 export default function EditContactPage() {
@@ -65,9 +69,31 @@ export default function EditContactPage() {
                 zipCode: '',
                 country: ''
             },
-            notes: ''
+            notes: '',
+            customProductPrices: []
         },
     });
+
+    const [products, setProducts] = useState([]);
+    const [fetchingProducts, setFetchingProducts] = useState(false);
+
+    useEffect(() => {
+        const fetchProducts = async () => {
+            setFetchingProducts(true);
+            try {
+                const response = await apiClient.getProducts({ limit: 100 });
+                if (response.success) {
+                    setProducts(response.data.products);
+                }
+            } catch (err) {
+                console.error('Error fetching products:', err);
+            } finally {
+                setFetchingProducts(false);
+            }
+        };
+
+        fetchProducts();
+    }, []);
 
     useEffect(() => {
         if (contactId) {
@@ -95,7 +121,14 @@ export default function EditContactPage() {
                         zipCode: contactData.address?.zipCode || '',
                         country: contactData.address?.country || ''
                     },
-                    notes: contactData.notes || ''
+                    notes: contactData.notes || '',
+                    customProductPrices: products.map(p => {
+                        const existingSpecial = contactData.customProductPrices?.find(cp => cp.productId === p._id);
+                        return {
+                            productId: p._id,
+                            inclusivePrice: existingSpecial ? existingSpecial.inclusivePrice : ''
+                        };
+                    })
                 });
             } else {
                 setError('Failed to load contact');
@@ -108,13 +141,37 @@ export default function EditContactPage() {
         }
     };
 
+    // Re-initialize customProductPrices when products load if contact is already loaded
+    useEffect(() => {
+        if (contact && products.length > 0) {
+            form.setValue('customProductPrices', products.map(p => {
+                const existingSpecial = contact.customProductPrices?.find(cp => cp.productId === p._id || cp.productId?._id === p._id);
+                return {
+                    productId: p._id,
+                    inclusivePrice: existingSpecial ? existingSpecial.inclusivePrice : ''
+                };
+            }));
+        }
+    }, [products, contact, form]);
+
     const onSubmit = async (data) => {
         setError('');
         setSuccess('');
         setLoading(true);
 
+        // Filter out empty inclusive prices
+        const filteredData = {
+            ...data,
+            customProductPrices: data.customProductPrices
+                ?.filter(p => p.inclusivePrice !== '' && p.inclusivePrice !== undefined)
+                .map(p => ({
+                    ...p,
+                    inclusivePrice: Number(p.inclusivePrice)
+                }))
+        };
+
         try {
-            const response = await apiClient.updateContact(contactId, data);
+            const response = await apiClient.updateContact(contactId, filteredData);
             if (response.success || response._id) {
                 setSuccess('Contact updated successfully!');
                 setTimeout(() => {
@@ -465,8 +522,59 @@ export default function EditContactPage() {
                                             </div>
                                         </FormFieldAnimation>
 
+                                        {/* Custom Product Prices Section - Only for Customers */}
+                                        {form.watch('type') === 'customer' && products.length > 0 && (
+                                            <FormFieldAnimation delay={0.75}>
+                                                <div className="space-y-4 border-t pt-6">
+                                                    <div className="flex items-center gap-2">
+                                                        <Plus className="h-4 w-4" />
+                                                        <FormLabel className="text-base font-semibold">Special Pricing (GST Inclusive)</FormLabel>
+                                                    </div>
+                                                    <p className="text-sm text-muted-foreground mb-4">
+                                                        Set custom inclusive prices for this customer. Leave blank to use default rates.
+                                                    </p>
+
+                                                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                                                        {products.map((product, index) => (
+                                                            <div key={product._id} className="flex flex-col space-y-2 p-3 border rounded-lg bg-card/50">
+                                                                <span className="text-sm font-medium truncate" title={product.name}>
+                                                                    {product.name}
+                                                                </span>
+                                                                <div className="flex items-center gap-2">
+                                                                    <FormField
+                                                                        control={form.control}
+                                                                        name={`customProductPrices.${index}.inclusivePrice`}
+                                                                        render={({ field }) => (
+                                                                            <FormItem className="w-full">
+                                                                                <FormControl>
+                                                                                    <div className="relative">
+                                                                                        <span className="absolute left-3 top-2 text-muted-foreground text-sm">₹</span>
+                                                                                        <Input
+                                                                                            type="number"
+                                                                                            step="0.01"
+                                                                                            placeholder="Inc. Price"
+                                                                                            {...field}
+                                                                                            className="pl-7 transition-all duration-300 focus:scale-105"
+                                                                                        />
+                                                                                    </div>
+                                                                                </FormControl>
+                                                                                <FormMessage />
+                                                                            </FormItem>
+                                                                        )}
+                                                                    />
+                                                                </div>
+                                                                <span className="text-xs text-muted-foreground">
+                                                                    Default Base: ₹{product.price.toFixed(2)}
+                                                                </span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </FormFieldAnimation>
+                                        )}
+
                                         {/* Notes */}
-                                        <FormFieldAnimation delay={0.7}>
+                                        <FormFieldAnimation delay={0.8}>
                                             <FormField
                                                 control={form.control}
                                                 name="notes"

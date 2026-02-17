@@ -84,7 +84,17 @@ const contactSchema = new mongoose.Schema({
   currentBalance: {
     type: Number,
     default: 0
-  }
+  },
+  customProductPrices: [{
+    productId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Product'
+    },
+    inclusivePrice: {
+      type: Number,
+      required: true
+    }
+  }]
 }, {
   timestamps: true
 });

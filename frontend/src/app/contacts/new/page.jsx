@@ -36,6 +36,10 @@ const contactSchema = z.object({
         country: z.string().optional(),
     }).optional(),
     notes: z.string().optional(),
+    customProductPrices: z.array(z.object({
+        productId: z.string(),
+        inclusivePrice: z.number().or(z.string()).optional()
+    })).optional(),
 });
 
 export default function AddContactPage() {
@@ -60,9 +64,36 @@ export default function AddContactPage() {
                 zipCode: '',
                 country: ''
             },
-            notes: ''
+            notes: '',
+            customProductPrices: []
         },
     });
+
+    const [products, setProducts] = useState([]);
+    const [fetchingProducts, setFetchingProducts] = useState(false);
+
+    useEffect(() => {
+        const fetchProducts = async () => {
+            setFetchingProducts(true);
+            try {
+                const response = await apiClient.getProducts({ limit: 100 });
+                if (response.success) {
+                    setProducts(response.data.products);
+                    // Initialize customProductPrices with all products
+                    form.setValue('customProductPrices', response.data.products.map(p => ({
+                        productId: p._id,
+                        inclusivePrice: ''
+                    })));
+                }
+            } catch (err) {
+                console.error('Error fetching products:', err);
+            } finally {
+                setFetchingProducts(false);
+            }
+        };
+
+        fetchProducts();
+    }, [form]);
 
     // Watch name and phone to auto-generate code_name
     const watchName = form.watch('name');
@@ -84,8 +115,19 @@ export default function AddContactPage() {
         setSuccess('');
         setLoading(true);
 
+        // Filter out empty inclusive prices
+        const filteredData = {
+            ...data,
+            customProductPrices: data.customProductPrices
+                ?.filter(p => p.inclusivePrice !== '' && p.inclusivePrice !== undefined)
+                .map(p => ({
+                    ...p,
+                    inclusivePrice: Number(p.inclusivePrice)
+                }))
+        };
+
         try {
-            const response = await apiClient.createContact(data);
+            const response = await apiClient.createContact(filteredData);
             if (response.success || response._id) {
                 setSuccess('Contact created successfully!');
                 setTimeout(() => {
@@ -401,8 +443,59 @@ export default function AddContactPage() {
                                             </div>
                                         </FormFieldAnimation>
 
+                                        {/* Custom Product Prices Section - Only for Customers */}
+                                        {form.watch('type') === 'customer' && products.length > 0 && (
+                                            <FormFieldAnimation delay={0.75}>
+                                                <div className="space-y-4 border-t pt-6">
+                                                    <div className="flex items-center gap-2">
+                                                        <Plus className="h-4 w-4" />
+                                                        <FormLabel className="text-base font-semibold">Special Pricing (GST Inclusive)</FormLabel>
+                                                    </div>
+                                                    <p className="text-sm text-muted-foreground mb-4">
+                                                        Set custom inclusive prices for this customer. Leave blank to use default rates.
+                                                    </p>
+
+                                                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                                                        {products.map((product, index) => (
+                                                            <div key={product._id} className="flex flex-col space-y-2 p-3 border rounded-lg bg-card/50">
+                                                                <span className="text-sm font-medium truncate" title={product.name}>
+                                                                    {product.name}
+                                                                </span>
+                                                                <div className="flex items-center gap-2">
+                                                                    <FormField
+                                                                        control={form.control}
+                                                                        name={`customProductPrices.${index}.inclusivePrice`}
+                                                                        render={({ field }) => (
+                                                                            <FormItem className="w-full">
+                                                                                <FormControl>
+                                                                                    <div className="relative">
+                                                                                        <span className="absolute left-3 top-2 text-muted-foreground text-sm">₹</span>
+                                                                                        <Input
+                                                                                            type="number"
+                                                                                            step="0.01"
+                                                                                            placeholder="Inc. Price"
+                                                                                            {...field}
+                                                                                            className="pl-7 transition-all duration-300 focus:scale-105"
+                                                                                        />
+                                                                                    </div>
+                                                                                </FormControl>
+                                                                                <FormMessage />
+                                                                            </FormItem>
+                                                                        )}
+                                                                    />
+                                                                </div>
+                                                                <span className="text-xs text-muted-foreground">
+                                                                    Default Base: ₹{product.price.toFixed(2)}
+                                                                </span>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </FormFieldAnimation>
+                                        )}
+
                                         {/* Notes */}
-                                        <FormFieldAnimation delay={0.7}>
+                                        <FormFieldAnimation delay={0.8}>
                                             <FormField
                                                 control={form.control}
                                                 name="notes"
