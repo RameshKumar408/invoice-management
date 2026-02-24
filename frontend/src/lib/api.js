@@ -232,6 +232,34 @@ class ApiClient {
         const response = await this.instance.get(`/reports/vendor/${id}`, { params });
         return response.data;
     }
+
+    // Expense methods
+    async getExpenses(params) {
+        const response = await this.instance.get('/expenses', { params });
+        return response.data;
+    }
+
+    async createExpense(data) {
+        const response = await this.instance.post('/expenses', data);
+        return response.data;
+    }
+
+    async deleteExpense(id) {
+        const response = await this.instance.delete(`/expenses/${id}`);
+        return response.data;
+    }
+
+    async getExpenseSummary(params) {
+        const response = await this.instance.get('/expenses/summary', { params });
+        return response.data;
+    }
+
+    async bulkSaleUpload(formData) {
+        const response = await this.instance.post('/bulk-upload/sale', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        return response.data;
+    }
 }
 
 export const apiClient = new ApiClient();

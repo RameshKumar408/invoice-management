@@ -20,7 +20,8 @@ import {
     DollarSign,
     TrendingUp,
     TrendingDown,
-    Printer
+    Printer,
+    Receipt
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useReactToPrint } from 'react-to-print';
@@ -52,6 +53,7 @@ export default function TransactionsPage() {
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [transactionToPrint, setTransactionToPrint] = useState(null);
+    const [expenseSummary, setExpenseSummary] = useState({ totalAmount: 0, count: 0 });
     const tableRef = useRef(null);
     const printRef = useRef(null);
 
@@ -154,10 +156,13 @@ export default function TransactionsPage() {
             if (startDate) params.startDate = startDate;
             if (endDate) params.endDate = endDate;
 
-            const response = await api.getTransactionSummary(params);
-            if (response.success) {
-                setSummary(response.data.summary);
-            }
+            const [txResponse, expResponse] = await Promise.all([
+                api.getTransactionSummary(params),
+                api.getExpenseSummary(params)
+            ]);
+
+            if (txResponse.success) setSummary(txResponse.data.summary);
+            if (expResponse.success) setExpenseSummary(expResponse.data.summary);
         } catch (err) {
             console.error('Error fetching summary:', err);
         }
@@ -213,7 +218,7 @@ export default function TransactionsPage() {
 
                 {/* Summary Cards */}
                 {summary && (
-                    <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+                    <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
                         <Card
                             className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-green-500 shadow-sm cursor-pointer hover:scale-105"
                             onClick={() => {
@@ -281,6 +286,25 @@ export default function TransactionsPage() {
                                     <span className="text-xs font-medium text-muted-foreground">
                                         Overall Performance
                                     </span>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        <Card className="hover:shadow-lg transition-all duration-300 border-l-4 border-l-purple-500 shadow-sm">
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Total Expenses</CardTitle>
+                                <div className="p-2 bg-purple-50 rounded-full">
+                                    <Receipt className="h-5 w-5 text-purple-600" />
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-3xl font-black text-purple-600">
+                                    RS {Number(expenseSummary.totalAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                </div>
+                                <div className="flex items-center gap-2 mt-1">
+                                    <Badge variant="outline" className="text-[10px] font-bold bg-purple-50 text-purple-700 border-purple-200">
+                                        {expenseSummary.count || 0} Entries
+                                    </Badge>
                                 </div>
                             </CardContent>
                         </Card>

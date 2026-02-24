@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -33,7 +34,8 @@ import {
     User,
     CreditCard,
     FileText,
-    Package
+    Package,
+    FileSpreadsheet
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { FadeIn, SlideIn, FormFieldAnimation, ScaleOnHover } from '@/components/animations';
@@ -271,19 +273,29 @@ export default function AddSalePage() {
             <div className="max-w-4xl mx-auto space-y-6">
                 {/* Header */}
                 <FadeIn delay={0.1}>
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
-                        <ScaleOnHover>
-                            <Button variant="outline" onClick={() => router.back()} size="sm">
-                                <ArrowLeft className="mr-2 h-4 w-4" />
-                                Back
-                            </Button>
-                        </ScaleOnHover>
-                        <div>
-                            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Invoice</h1>
-                            <p className="text-xs sm:text-sm text-muted-foreground">
-                                Record a new sale transaction for your customers
-                            </p>
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                        <div className="flex items-center gap-3">
+                            <ScaleOnHover>
+                                <Button variant="outline" onClick={() => router.back()} size="sm">
+                                    <ArrowLeft className="mr-2 h-4 w-4" />
+                                    Back
+                                </Button>
+                            </ScaleOnHover>
+                            <div>
+                                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Invoice</h1>
+                                <p className="text-xs sm:text-sm text-muted-foreground">
+                                    Record a new sale transaction for your customers
+                                </p>
+                            </div>
                         </div>
+                        <ScaleOnHover>
+                            <Link href="/transactions/bulk-upload">
+                                <Button variant="outline" size="sm" className="gap-2 border-blue-200 text-blue-600 hover:bg-blue-50">
+                                    <FileSpreadsheet className="h-4 w-4" />
+                                    Bulk Upload (Excel)
+                                </Button>
+                            </Link>
+                        </ScaleOnHover>
                     </div>
                 </FadeIn>
 
