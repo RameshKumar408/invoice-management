@@ -53,6 +53,13 @@ export default function DashboardPage() {
                         </div>
                         <div className="flex gap-2">
                             <Button asChild>
+                                <Link href="/expenses">
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    Add Expense
+                                </Link>
+                            </Button>
+
+                            <Button asChild>
                                 <Link href="/transactions/sale">
                                     <Plus className="mr-2 h-4 w-4" />
                                     Add Sale

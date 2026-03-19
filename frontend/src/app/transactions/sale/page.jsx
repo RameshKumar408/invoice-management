@@ -25,6 +25,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import {
+    Calendar,
     Plus,
     Trash2,
     Save,
@@ -46,6 +47,7 @@ const saleFormSchema = z.object({
     paymentMethod: z.enum(['cash', 'credit', 'card'], {
         required_error: 'Payment method is required',
     }),
+    date: z.string().min(1, 'Date is required'),
     notes: z.string().optional(),
     products: z.array(z.object({
         productId: z.string().min(1, 'Product is required'),
@@ -73,6 +75,7 @@ export default function AddSalePage() {
         defaultValues: {
             customerId: '',
             paymentMethod: 'cash',
+            date: new Date().toISOString().split('T')[0],
             notes: '',
             products: [{ productId: '', quantity: 1, price: 0, incPrice: 0, unitType: 'case' }],
             discount: 0,
@@ -231,6 +234,7 @@ export default function AddSalePage() {
             customerId: data.customerId,
             products: data.products,
             paymentMethod: data.paymentMethod,
+            date: data.date,
             notes: data.notes,
             subtotal: amounts.subtotal,
             sgst: amounts.sgst,
@@ -374,8 +378,53 @@ export default function AddSalePage() {
                                                 )}
                                             />
                                         </FormFieldAnimation>
-
                                         <FormFieldAnimation delay={0.4}>
+
+                                            <FormField
+                                                control={form.control}
+                                                name="date"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel className="flex items-center gap-1">
+                                                            <Calendar className="h-4 w-4" />
+                                                            Transaction Date *
+                                                        </FormLabel>
+                                                        <FormControl>
+                                                            <div className="relative">
+                                                                <Input
+                                                                    type="text"
+                                                                    placeholder="DD/MM/YYYY"
+                                                                    value={field.value ? field.value.split('-').reverse().join('/') : ''}
+                                                                    onChange={(e) => {
+                                                                        const val = e.target.value;
+                                                                        const parts = val.split('/');
+                                                                        if (parts.length === 3) {
+                                                                            const [d, m, y] = parts;
+                                                                            if (y.length === 4) {
+                                                                                field.onChange(`${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`);
+                                                                            }
+                                                                        }
+                                                                    }}
+                                                                    className="pr-10 transition-all duration-300 focus:scale-105"
+                                                                />
+                                                                <div className="absolute right-0 top-0 h-full w-10 flex items-center justify-center pointer-events-none">
+                                                                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                                                                </div>
+                                                                <input
+                                                                    type="date"
+                                                                    value={field.value || ''}
+                                                                    onChange={(e) => field.onChange(e.target.value)}
+                                                                    className="absolute inset-0 opacity-0 cursor-pointer"
+                                                                />
+                                                            </div>
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                        </FormFieldAnimation>
+
+                                        <FormFieldAnimation delay={0.45}>
                                             <FormField
                                                 control={form.control}
                                                 name="paymentMethod"

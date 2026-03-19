@@ -125,7 +125,8 @@ const createTransaction = asyncHandler(async (req, res) => {
     discount,
     status,
     totalAmount: bodyTotalAmount,
-    initialPayment // Destructure initialPayment
+    initialPayment, // Destructure initialPayment
+    date // Destructure date
   } = req.body;
   const businessId = req.businessId;
 
@@ -224,15 +225,17 @@ const createTransaction = asyncHandler(async (req, res) => {
       });
     }
 
+    // Use provided date or current date
+    const transactionDate = date ? new Date(date) : new Date();
+
     // Generate Invoice Number
-    const now = new Date();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const year = now.getFullYear();
+    const month = String(transactionDate.getMonth() + 1).padStart(2, '0');
+    const year = transactionDate.getFullYear();
     const prefix = `${month}${year}`;
 
     // Find the number of transactions in this month to get the next sequence
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    const startOfMonth = new Date(transactionDate.getFullYear(), transactionDate.getMonth(), 1, 0, 0, 0, 0);
+    const endOfMonth = new Date(transactionDate.getFullYear(), transactionDate.getMonth() + 1, 0, 23, 59, 59, 999);
 
     const count = await Transaction.countDocuments({
       businessId,
@@ -259,11 +262,12 @@ const createTransaction = asyncHandler(async (req, res) => {
       status: status || 'pending', // Default to pending unless fully paid
       notes,
       invoiceNumber,
+      date: transactionDate,
       paidAmount: paidAmount,
       payments: paidAmount > 0 ? [{
         amount: paidAmount,
         method: paymentMethod || 'cash',
-        date: new Date(),
+        date: transactionDate,
         note: 'Initial Payment'
       }] : []
     };

@@ -23,7 +23,7 @@ const productSchema = z.object({
     category: z.string().min(2, 'Category must be at least 2 characters'),
     description: z.string().optional().or(z.literal('')),
     price: z.coerce.number().min(0, 'Price must be at least 0'),
-    stock: z.coerce.number().int().min(0, 'Stock quantity must be at least 0'),
+    stock: z.coerce.number().int().min(0, 'Stock quantity must be at least 0').optional().or(z.literal('')),
     minStockLevel: z.coerce.number().int().min(0, 'Minimum stock level must be at least 0').optional().or(z.literal('')),
     HSN: z.string().optional().or(z.literal('')),
     cgst: z.coerce.number().min(0, 'CGST must be at least 0').default(0),
@@ -165,7 +165,7 @@ export default function NewProductPage() {
                                             name="stock"
                                             render={({ field }) => (
                                                 <FormItem>
-                                                    <FormLabel>Stock Quantity *</FormLabel>
+                                                    <FormLabel>Stock Quantity </FormLabel>
                                                     <FormControl>
                                                         <Input type="number" min="0" {...field} />
                                                     </FormControl>
