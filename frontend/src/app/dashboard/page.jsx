@@ -32,7 +32,7 @@ export default function DashboardPage() {
 
     if (loading) {
         return (
-            <ProtectedRoute>
+            <ProtectedRoute roles={['admin']}>
                 <Layout>
                     <div className="flex items-center justify-center h-64">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -43,7 +43,7 @@ export default function DashboardPage() {
     }
 
     return (
-        <ProtectedRoute>
+        <ProtectedRoute roles={['admin']}>
             <Layout>
                 <div className="space-y-6">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">

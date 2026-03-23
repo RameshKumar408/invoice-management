@@ -16,12 +16,23 @@ const getExpenses = asyncHandler(async (req, res) => {
     } = req.query;
     const businessId = req.businessId;
 
+    // Base filter: current business
     const filter = { businessId };
+
+    // Role-based filtering:
+    // If not admin, only show own expenses
+    if (req.user.role !== 'admin') {
+        filter.createdBy = req.user._id;
+    }
 
     if (startDate || endDate) {
         filter.date = {};
         if (startDate) filter.date.$gte = new Date(startDate);
-        if (endDate) filter.date.$lte = new Date(endDate);
+        if (endDate) {
+            const end = new Date(endDate);
+            end.setHours(23, 59, 59, 999);
+            filter.date.$lte = end;
+        }
     }
 
     if (title) {
@@ -33,6 +44,7 @@ const getExpenses = asyncHandler(async (req, res) => {
     const skip = (pageNum - 1) * limitNum;
 
     const expenses = await Expense.find(filter)
+        .populate('createdBy', 'name')
         .sort({ date: -1 })
         .limit(limitNum)
         .skip(skip);
@@ -114,6 +126,12 @@ const getExpenseSummary = asyncHandler(async (req, res) => {
     const businessId = req.businessId;
 
     const filter = { businessId };
+
+    // Role-based filtering:
+    // If not admin, only sum own expenses
+    if (req.user.role !== 'admin') {
+        filter.createdBy = req.user._id;
+    }
 
     if (startDate || endDate) {
         filter.date = {};

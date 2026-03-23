@@ -60,6 +60,16 @@ const contactSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  location: {
+    lat: {
+      type: Number,
+      trim: true
+    },
+    lng: {
+      type: Number,
+      trim: true
+    }
+  },
   notes: {
     type: String,
     trim: true,

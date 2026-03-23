@@ -73,7 +73,11 @@ export default function LoginPage() {
         if (startBilling) {
             router.push('/transactions/sale');
         } else {
-            router.push('/dashboard');
+            if (user?.role === 'salesman' || user?.role === 'staff') {
+                router.push('/contacts');
+            } else {
+                router.push('/dashboard');
+            }
         }
     };
 

@@ -40,6 +40,10 @@ const contactSchema = z.object({
         productId: z.string(),
         inclusivePrice: z.number().or(z.string()).optional()
     })).optional(),
+    location: z.object({
+        lat: z.number().optional().or(z.string().optional()),
+        lng: z.number().optional().or(z.string().optional()),
+    }).optional(),
 });
 
 export default function AddContactPage() {
@@ -65,7 +69,11 @@ export default function AddContactPage() {
                 country: ''
             },
             notes: '',
-            customProductPrices: []
+            customProductPrices: [],
+            location: {
+                lat: '',
+                lng: ''
+            }
         },
     });
 
@@ -142,6 +150,31 @@ export default function AddContactPage() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handleGetLocation = () => {
+        if (!navigator.geolocation) {
+            setError('Geolocation is not supported by your browser');
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                form.setValue('location.lat', position.coords.latitude);
+                form.setValue('location.lng', position.coords.longitude);
+                setSuccess('Precise location captured successfully!');
+                setTimeout(() => setSuccess(''), 3000);
+            },
+            (err) => {
+                console.error('Geolocation error:', err);
+                setError('Unable to retrieve your location. Please check your browser permissions.');
+            },
+            {
+                enableHighAccuracy: true,
+                timeout: 5000,
+                maximumAge: 0
+            }
+        );
     };
 
     return (
@@ -440,6 +473,69 @@ export default function AddContactPage() {
                                                         )}
                                                     />
                                                 </div>
+                                            </div>
+                                        </FormFieldAnimation>
+                                        
+                                        {/* Geolocation Section */}
+                                        <FormFieldAnimation delay={0.7}>
+                                            <div className="space-y-4 border-t pt-6">
+                                                <div className="flex items-center justify-between">
+                                                    <div className="flex items-center gap-2">
+                                                        <MapPin className="h-4 w-4 text-primary" />
+                                                        <FormLabel className="text-base font-semibold">Current Location</FormLabel>
+                                                    </div>
+                                                    <Button 
+                                                        type="button" 
+                                                        variant="outline" 
+                                                        size="sm"
+                                                        onClick={handleGetLocation}
+                                                        className="h-8 transition-all hover:bg-primary/10"
+                                                    >
+                                                        <MapPin className="mr-2 h-4 w-4" />
+                                                        Capture GPS Location
+                                                    </Button>
+                                                </div>
+                                                <div className="grid gap-4 md:grid-cols-2">
+                                                    <FormField
+                                                        control={form.control}
+                                                        name="location.lat"
+                                                        render={({ field }) => (
+                                                            <FormItem>
+                                                                <FormLabel>Latitude</FormLabel>
+                                                                <FormControl>
+                                                                    <Input 
+                                                                        placeholder="Auto-captured latitude" 
+                                                                        {...field} 
+                                                                        readOnly 
+                                                                        className="bg-muted transition-all duration-300"
+                                                                    />
+                                                                </FormControl>
+                                                                <FormMessage />
+                                                            </FormItem>
+                                                        )}
+                                                    />
+                                                    <FormField
+                                                        control={form.control}
+                                                        name="location.lng"
+                                                        render={({ field }) => (
+                                                            <FormItem>
+                                                                <FormLabel>Longitude</FormLabel>
+                                                                <FormControl>
+                                                                    <Input 
+                                                                        placeholder="Auto-captured longitude" 
+                                                                        {...field} 
+                                                                        readOnly 
+                                                                        className="bg-muted transition-all duration-300"
+                                                                    />
+                                                                </FormControl>
+                                                                <FormMessage />
+                                                            </FormItem>
+                                                        )}
+                                                    />
+                                                </div>
+                                                <FormDescription className="text-xs">
+                                                    Click 'Capture GPS Location' to automatically fill coordinates using your device's GPS.
+                                                </FormDescription>
                                             </div>
                                         </FormFieldAnimation>
 

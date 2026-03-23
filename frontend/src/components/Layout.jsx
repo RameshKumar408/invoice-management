@@ -25,18 +25,21 @@ import {
     PanelLeftClose,
     PanelLeft,
     ShoppingCart,
-    ChevronDown
+    ChevronDown,
+    FileText
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navigation = [
-    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Products', href: '/products', icon: Package },
-    { name: 'Contacts', href: '/contacts', icon: Users },
-    { name: 'Transactions', href: '/transactions', icon: Receipt },
-    { name: 'Expenses', href: '/expenses', icon: BarChart3 },
-    { name: 'Add Sale', href: '/transactions/sale', icon: ShoppingCart },
-    { name: 'Add Purchase', href: '/transactions/purchase', icon: ChevronDown },
+    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['admin'] },
+    { name: 'Products', href: '/products', icon: Package, roles: ['admin'] },
+    { name: 'Contacts', href: '/contacts', icon: Users, roles: ['admin', 'staff', 'salesman'] },
+    { name: 'Transactions', href: '/transactions', icon: Receipt, roles: ['admin', 'staff'] },
+    { name: 'Sales Requests', href: '/transactions/requests', icon: FileText, roles: ['admin', 'staff', 'salesman'] },
+    { name: 'Expenses', href: '/expenses', icon: BarChart3, roles: ['admin', 'staff'] },
+    { name: 'Add Sale', href: '/transactions/sale', icon: ShoppingCart, roles: ['admin', 'staff', 'salesman'] },
+    { name: 'Add Purchase', href: '/transactions/purchase', icon: ChevronDown, roles: ['admin'] },
+    { name: 'Users', href: '/users', icon: Users, adminOnly: true, roles: ['admin'] },
     // { name: 'Reports', href: '/reports', icon: BarChart3 },
 ];
 
@@ -157,7 +160,11 @@ export function Layout({ children }) {
                     )}
                 >
                     <nav className="flex flex-col gap-2 p-4">
-                        {navigation.map((item) => {
+                        {navigation.filter(item => {
+                            if (item.adminOnly) return user?.role === 'admin';
+                            if (item.roles) return item.roles.includes(user?.role);
+                            return true;
+                        }).map((item) => {
                             const Icon = item.icon;
                             const isActive = pathname === item.href;
 
@@ -192,7 +199,11 @@ export function Layout({ children }) {
                         'flex flex-col gap-2 p-4 transition-opacity duration-200',
                         sidebarCollapsed ? 'opacity-0' : 'opacity-100'
                     )}>
-                        {navigation.map((item) => {
+                        {navigation.filter(item => {
+                            if (item.adminOnly) return user?.role === 'admin';
+                            if (item.roles) return item.roles.includes(user?.role);
+                            return true;
+                        }).map((item) => {
                             const Icon = item.icon;
                             const isActive = pathname === item.href;
 

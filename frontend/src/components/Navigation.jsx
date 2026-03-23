@@ -31,13 +31,16 @@ import {
 import { cn } from '@/lib/utils';
 
 const navigation = [
-    { name: 'Home', href: '/', icon: Home },
-    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { name: 'Products', href: '/products', icon: Package },
-    { name: 'Contacts', href: '/contacts', icon: Users },
-    { name: 'Transactions', href: '/transactions', icon: Receipt },
-    { name: 'Add Sale', href: '/transactions', icon: ShoppingCart },
-    { name: 'Add Purchase', href: '/transactions', icon: ChevronDown },
+    { name: 'Home', href: '/', icon: Home, roles: ['admin'] },
+    { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard, roles: ['admin'] },
+    { name: 'Products', href: '/products', icon: Package, roles: ['admin'] },
+    { name: 'Contacts', href: '/contacts', icon: Users, roles: ['admin', 'staff', 'salesman'] },
+    { name: 'Transactions', href: '/transactions', icon: Receipt, roles: ['admin', 'staff'] },
+    { name: 'Sales Requests', href: '/transactions/requests', icon: FileText, roles: ['admin', 'staff', 'salesman'] },
+    { name: 'Add Sale', href: '/transactions/sale', icon: ShoppingCart, roles: ['admin', 'staff', 'salesman'] },
+    { name: 'Expenses', href: '/expenses', icon: Receipt, roles: ['admin', 'staff'] },
+    { name: 'Add Purchase', href: '/transactions/purchase', icon: ChevronDown, roles: ['admin'] },
+    { name: 'Users', href: '/users', icon: Users, adminOnly: true, roles: ['admin'] },
     // { name: 'Reports', href: '/reports', icon: BarChart3 },
 ];
 
@@ -66,7 +69,11 @@ export function Navigation() {
 
                     {/* Desktop Navigation */}
                     <nav className="hidden md:flex items-center space-x-6 text-sm font-medium">
-                        {navigation.map((item, index) => {
+                        {navigation.filter(item => {
+                            if (item.adminOnly) return user?.role === 'admin';
+                            if (item.roles) return item.roles.includes(user?.role);
+                            return true;
+                        }).map((item, index) => {
                             const Icon = item.icon;
 
                             // Special handling for Transactions with dropdown
@@ -101,12 +108,14 @@ export function Navigation() {
                                                         Add Sale
                                                     </Link>
                                                 </DropdownMenuItem>
-                                                <DropdownMenuItem asChild>
-                                                    <Link href="/transactions/purchase" className="flex items-center cursor-pointer">
-                                                        <ShoppingCart className="mr-2 h-4 w-4" />
-                                                        Add Purchase
-                                                    </Link>
-                                                </DropdownMenuItem>
+                                                {user?.role === 'admin' && (
+                                                    <DropdownMenuItem asChild>
+                                                        <Link href="/transactions/purchase" className="flex items-center cursor-pointer">
+                                                            <ShoppingCart className="mr-2 h-4 w-4" />
+                                                            Add Purchase
+                                                        </Link>
+                                                    </DropdownMenuItem>
+                                                )}
                                             </DropdownMenuContent>
                                         </DropdownMenu>
                                     </FadeIn>
@@ -202,7 +211,11 @@ export function Navigation() {
                         <div className="md:hidden">
                             <StaggerContainer staggerDelay={0.05}>
                                 <div className="space-y-1 px-2 pb-3 pt-2 shadow-lg bg-background border-t">
-                                    {navigation.map((item) => {
+                                    {navigation.filter(item => {
+                                        if (item.adminOnly) return user?.role === 'admin';
+                                        if (item.roles) return item.roles.includes(user?.role);
+                                        return true;
+                                    }).map((item) => {
                                         const Icon = item.icon;
                                         return (
                                             <StaggerItem key={item.href}>
@@ -225,32 +238,36 @@ export function Navigation() {
 
                                     {/* Action Buttons - Mobile */}
                                     <div className="pt-3 mt-3 border-t space-y-2">
-                                        <StaggerItem>
-                                            <Button
-                                                asChild
-                                                size="sm"
-                                                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-md hover:shadow-lg transition-all duration-300"
-                                                onClick={() => setMobileMenuOpen(false)}
-                                            >
-                                                <Link href="/transactions/sale" className="flex items-center justify-center space-x-2">
-                                                    <FileText className="h-4 w-4" />
-                                                    <span>Add Invoice</span>
-                                                </Link>
-                                            </Button>
-                                        </StaggerItem>
-                                        <StaggerItem>
-                                            <Button
-                                                asChild
-                                                size="sm"
-                                                className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-md hover:shadow-lg transition-all duration-300"
-                                                onClick={() => setMobileMenuOpen(false)}
-                                            >
-                                                <Link href="/transactions/purchase" className="flex items-center justify-center space-x-2">
-                                                    <ShoppingCart className="h-4 w-4" />
-                                                    <span>Add Purchase</span>
-                                                </Link>
-                                            </Button>
-                                        </StaggerItem>
+                                        {(user?.role === 'admin' || user?.role === 'staff' || user?.role === 'salesman') && (
+                                            <StaggerItem>
+                                                <Button
+                                                    asChild
+                                                    size="sm"
+                                                    className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-md hover:shadow-lg transition-all duration-300"
+                                                    onClick={() => setMobileMenuOpen(false)}
+                                                >
+                                                    <Link href="/transactions/sale" className="flex items-center justify-center space-x-2">
+                                                        <FileText className="h-4 w-4" />
+                                                        <span>Add Invoice</span>
+                                                    </Link>
+                                                </Button>
+                                            </StaggerItem>
+                                        )}
+                                        {user?.role === 'admin' && (
+                                            <StaggerItem>
+                                                <Button
+                                                    asChild
+                                                    size="sm"
+                                                    className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-md hover:shadow-lg transition-all duration-300"
+                                                    onClick={() => setMobileMenuOpen(false)}
+                                                >
+                                                    <Link href="/transactions/purchase" className="flex items-center justify-center space-x-2">
+                                                        <ShoppingCart className="h-4 w-4" />
+                                                        <span>Add Purchase</span>
+                                                    </Link>
+                                                </Button>
+                                            </StaggerItem>
+                                        )}
                                     </div>
                                 </div>
                             </StaggerContainer>

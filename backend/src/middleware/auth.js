@@ -58,6 +58,7 @@ const authenticate = async (req, res, next) => {
 
     // Attach user to request
     req.user = user;
+    req.businessId = user.businessId;
     next();
 
   } catch (error) {

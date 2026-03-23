@@ -126,7 +126,9 @@ const createTransaction = asyncHandler(async (req, res) => {
     status,
     totalAmount: bodyTotalAmount,
     initialPayment, // Destructure initialPayment
-    date // Destructure date
+    date, // Destructure date
+    salesmanId,
+    salesmanName
   } = req.body;
   const businessId = req.businessId;
 
@@ -269,7 +271,9 @@ const createTransaction = asyncHandler(async (req, res) => {
         method: paymentMethod || 'cash',
         date: transactionDate,
         note: 'Initial Payment'
-      }] : []
+      }] : [],
+      salesmanId,
+      salesmanName
     };
 
     // If fully paid, mark as completed
