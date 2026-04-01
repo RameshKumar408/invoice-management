@@ -26,7 +26,7 @@ const contactSchema = z.object({
     type: z.enum(['customer', 'vendor'], {
         required_error: 'Please select a contact type',
     }),
-    GSTIN: z.string().min(15, 'GSTIN must be 15 characters').max(15, 'GSTIN must be 15 characters').optional(),
+    GSTIN: z.string().optional(),
     code_name: z.string().optional(),
     address: z.object({
         street: z.string().optional(),
@@ -64,9 +64,9 @@ export default function AddContactPage() {
             address: {
                 street: '',
                 city: '',
-                state: '',
-                zipCode: '',
-                country: ''
+                state: 'Tamil Nadu',
+                zipCode: '6250',
+                country: 'India'
             },
             notes: '',
             customProductPrices: [],
@@ -475,7 +475,7 @@ export default function AddContactPage() {
                                                 </div>
                                             </div>
                                         </FormFieldAnimation>
-                                        
+
                                         {/* Geolocation Section */}
                                         <FormFieldAnimation delay={0.7}>
                                             <div className="space-y-4 border-t pt-6">
@@ -484,9 +484,9 @@ export default function AddContactPage() {
                                                         <MapPin className="h-4 w-4 text-primary" />
                                                         <FormLabel className="text-base font-semibold">Current Location</FormLabel>
                                                     </div>
-                                                    <Button 
-                                                        type="button" 
-                                                        variant="outline" 
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
                                                         size="sm"
                                                         onClick={handleGetLocation}
                                                         className="h-8 transition-all hover:bg-primary/10"
@@ -503,10 +503,10 @@ export default function AddContactPage() {
                                                             <FormItem>
                                                                 <FormLabel>Latitude</FormLabel>
                                                                 <FormControl>
-                                                                    <Input 
-                                                                        placeholder="Auto-captured latitude" 
-                                                                        {...field} 
-                                                                        readOnly 
+                                                                    <Input
+                                                                        placeholder="Auto-captured latitude"
+                                                                        {...field}
+                                                                        readOnly
                                                                         className="bg-muted transition-all duration-300"
                                                                     />
                                                                 </FormControl>
@@ -521,10 +521,10 @@ export default function AddContactPage() {
                                                             <FormItem>
                                                                 <FormLabel>Longitude</FormLabel>
                                                                 <FormControl>
-                                                                    <Input 
-                                                                        placeholder="Auto-captured longitude" 
-                                                                        {...field} 
-                                                                        readOnly 
+                                                                    <Input
+                                                                        placeholder="Auto-captured longitude"
+                                                                        {...field}
+                                                                        readOnly
                                                                         className="bg-muted transition-all duration-300"
                                                                     />
                                                                 </FormControl>

@@ -59,13 +59,13 @@ export default function DashboardPage() {
                                 </Link>
                             </Button>
 
-                            <Button asChild>
+                            <Button asChild style={{ background: 'green' }}>
                                 <Link href="/transactions/sale">
                                     <Plus className="mr-2 h-4 w-4" />
                                     Add Sale
                                 </Link>
                             </Button>
-                            <Button variant="outline" asChild>
+                            <Button variant="outline" asChild style={{ background: 'red' }}>
                                 <Link href="/transactions/purchase">
                                     <Plus className="mr-2 h-4 w-4" />
                                     Add Purchase
