@@ -62,7 +62,7 @@ const corsOptions = {
   origin: function (origin, callback) {
     console.log("origin ", origin);
     const allowedOrigins = process.env.NODE_ENV === 'production'
-      ? ['https://inventory-billing-management-system.vercel.app', 'https://0mkzpmk2-3000.inc1.devtunnels.ms', 'http://10.181.0.136:3000']
+      ? ['https://billing.mawinkings.com']
       : ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002', 'http://localhost:3003', 'http://localhost:3004', 'http://10.181.0.136:3000'];
 
     // Allow requests with no origin (like mobile apps or curl requests)

@@ -26,7 +26,7 @@ const contactSchema = z.object({
     type: z.enum(['customer', 'vendor'], {
         required_error: 'Please select a contact type',
     }),
-    GSTIN: z.string().min(15, 'GSTIN must be 15 characters').max(15, 'GSTIN must be 15 characters'),
+    GSTIN: z.string().min(15, 'GSTIN must be 15 characters').max(15, 'GSTIN must be 15 characters').optional(),
     code_name: z.string().optional(),
     address: z.object({
         street: z.string().optional(),
@@ -297,7 +297,7 @@ export default function AddContactPage() {
                                                         <FormItem>
                                                             <FormLabel>
                                                                 <Hash className="inline h-4 w-4 mr-1" />
-                                                                GSTIN *
+                                                                GSTIN
                                                             </FormLabel>
                                                             <FormControl>
                                                                 <Input

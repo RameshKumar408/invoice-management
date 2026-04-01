@@ -223,6 +223,7 @@ const createContactValidation = [
     .withMessage('Notes cannot exceed 500 characters'),
 
   body('GSTIN')
+    .optional()
     .trim()
     .isLength({ max: 15 })
     .withMessage('GSTIN cannot exceed 15 characters'),
