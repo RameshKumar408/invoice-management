@@ -4,15 +4,19 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 
-export function ProtectedRoute({ children }) {
+export function ProtectedRoute({ children, roles = [] }) {
     const { user, loading } = useAuth();
     const router = useRouter();
 
     useEffect(() => {
-        if (!loading && !user) {
-            router.push('/login');
+        if (!loading) {
+            if (!user) {
+                router.push('/login');
+            } else if (roles.length > 0 && !roles.includes(user.role)) {
+                router.push('/');
+            }
         }
-    }, [user, loading, router]);
+    }, [user, loading, router, roles]);
 
     if (loading) {
         return (
@@ -22,7 +26,7 @@ export function ProtectedRoute({ children }) {
         );
     }
 
-    if (!user) {
+    if (!user || (roles.length > 0 && !roles.includes(user.role))) {
         return null;
     }
 

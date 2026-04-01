@@ -32,7 +32,7 @@ export default function DashboardPage() {
 
     if (loading) {
         return (
-            <ProtectedRoute>
+            <ProtectedRoute roles={['admin']}>
                 <Layout>
                     <div className="flex items-center justify-center h-64">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -43,7 +43,7 @@ export default function DashboardPage() {
     }
 
     return (
-        <ProtectedRoute>
+        <ProtectedRoute roles={['admin']}>
             <Layout>
                 <div className="space-y-6">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -52,6 +52,13 @@ export default function DashboardPage() {
                             <p className="text-muted-foreground">Welcome to your inventory management system</p>
                         </div>
                         <div className="flex gap-2">
+                            <Button asChild>
+                                <Link href="/expenses">
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    Add Expense
+                                </Link>
+                            </Button>
+
                             <Button asChild>
                                 <Link href="/transactions/sale">
                                     <Plus className="mr-2 h-4 w-4" />

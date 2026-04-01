@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { ProtectedRoute } from '@/components/ProtectedRoute';
 import Link from 'next/link';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -25,6 +26,7 @@ import {
     DialogTitle,
 } from "@/components/ui/dialog";
 import {
+    Calendar,
     Plus,
     Trash2,
     Save,
@@ -38,6 +40,7 @@ import {
     FileSpreadsheet
 } from 'lucide-react';
 import { api } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
 import { FadeIn, SlideIn, FormFieldAnimation, ScaleOnHover } from '@/components/animations';
 
 // Form validation schema
@@ -46,6 +49,7 @@ const saleFormSchema = z.object({
     paymentMethod: z.enum(['cash', 'credit', 'card'], {
         required_error: 'Payment method is required',
     }),
+    date: z.string().min(1, 'Date is required'),
     notes: z.string().optional(),
     products: z.array(z.object({
         productId: z.string().min(1, 'Product is required'),
@@ -59,7 +63,9 @@ const saleFormSchema = z.object({
 });
 
 export default function AddSalePage() {
+    const { user } = useAuth();
     const router = useRouter();
+    const isSalesman = user?.role === 'salesman';
     const [customers, setCustomers] = useState([]);
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -73,6 +79,7 @@ export default function AddSalePage() {
         defaultValues: {
             customerId: '',
             paymentMethod: 'cash',
+            date: new Date().toISOString().split('T')[0],
             notes: '',
             products: [{ productId: '', quantity: 1, price: 0, incPrice: 0, unitType: 'case' }],
             discount: 0,
@@ -231,31 +238,48 @@ export default function AddSalePage() {
             customerId: data.customerId,
             products: data.products,
             paymentMethod: data.paymentMethod,
+            date: data.date,
             notes: data.notes,
-            subtotal: amounts.subtotal,
-            sgst: amounts.sgst,
-            cgst: amounts.cgst,
+            subtotal: Number(amounts.subtotal.toFixed(2)),
+            sgst: Number(amounts.sgst.toFixed(2)),
+            cgst: Number(amounts.cgst.toFixed(2)),
             discount: data.discount || 0,
-            initialPayment: data.initialPayment || 0,
-            totalAmount: amounts.total,
+            initialPayment: isSalesman ? 0 : (data.initialPayment || 0),
+            totalAmount: Number(amounts.total.toFixed(2)),
+            salesmanId: user?.id || user?._id,
+            salesmanName: user?.name,
         };
-        setPendingData(saleData);
-        setIsConfirmOpen(true);
+
+        if (isSalesman) {
+            // Skip confirmation dialog and force pending for salesmen
+            setPendingData(saleData);
+            processSale('pending', saleData);
+        } else {
+            setPendingData(saleData);
+            setIsConfirmOpen(true);
+        }
     };
 
-    const processSale = async (status) => {
+    const processSale = async (status, dataOverride = null) => {
         try {
             setLoading(true);
             setError('');
             setIsConfirmOpen(false);
 
-            const finalData = { ...pendingData, status };
-            const response = await api.createTransaction(finalData);
+            const dataToSubmit = dataOverride || pendingData;
+            
+            let response;
+            if (isSalesman) {
+                response = await api.createSalesRequest(dataToSubmit);
+            } else {
+                const finalData = { ...dataToSubmit, status };
+                response = await api.createTransaction(finalData);
+            }
 
             if (response.success) {
-                setSuccess('Sale recorded successfully!');
+                setSuccess(isSalesman ? 'Sales request sent for approval!' : 'Sale recorded successfully!');
                 setTimeout(() => {
-                    router.push('/transactions');
+                    router.push(isSalesman ? '/transactions/requests' : '/transactions');
                 }, 2000);
             } else {
                 setError(response.message || 'Failed to record sale');
@@ -269,7 +293,8 @@ export default function AddSalePage() {
     };
 
     return (
-        <Layout>
+        <ProtectedRoute roles={['admin', 'staff', 'salesman']}>
+            <Layout>
             <div className="max-w-4xl mx-auto space-y-6">
                 {/* Header */}
                 <FadeIn delay={0.1}>
@@ -374,8 +399,53 @@ export default function AddSalePage() {
                                                 )}
                                             />
                                         </FormFieldAnimation>
-
                                         <FormFieldAnimation delay={0.4}>
+
+                                            <FormField
+                                                control={form.control}
+                                                name="date"
+                                                render={({ field }) => (
+                                                    <FormItem>
+                                                        <FormLabel className="flex items-center gap-1">
+                                                            <Calendar className="h-4 w-4" />
+                                                            Transaction Date *
+                                                        </FormLabel>
+                                                        <FormControl>
+                                                            <div className="relative">
+                                                                <Input
+                                                                    type="text"
+                                                                    placeholder="DD/MM/YYYY"
+                                                                    value={field.value ? field.value.split('-').reverse().join('/') : ''}
+                                                                    onChange={(e) => {
+                                                                        const val = e.target.value;
+                                                                        const parts = val.split('/');
+                                                                        if (parts.length === 3) {
+                                                                            const [d, m, y] = parts;
+                                                                            if (y.length === 4) {
+                                                                                field.onChange(`${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`);
+                                                                            }
+                                                                        }
+                                                                    }}
+                                                                    className="pr-10 transition-all duration-300 focus:scale-105"
+                                                                />
+                                                                <div className="absolute right-0 top-0 h-full w-10 flex items-center justify-center pointer-events-none">
+                                                                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                                                                </div>
+                                                                <input
+                                                                    type="date"
+                                                                    value={field.value || ''}
+                                                                    onChange={(e) => field.onChange(e.target.value)}
+                                                                    className="absolute inset-0 opacity-0 cursor-pointer"
+                                                                />
+                                                            </div>
+                                                        </FormControl>
+                                                        <FormMessage />
+                                                    </FormItem>
+                                                )}
+                                            />
+                                        </FormFieldAnimation>
+
+                                        <FormFieldAnimation delay={0.45}>
                                             <FormField
                                                 control={form.control}
                                                 name="paymentMethod"
@@ -682,34 +752,36 @@ export default function AddSalePage() {
                                             </div>
                                         </div>
 
-                                        {/* Initial Payment Field */}
-                                        <div className="flex justify-between items-center py-2 border-b border-dashed bg-green-500/10 px-2 rounded">
-                                            <div className="flex items-center gap-2">
-                                                <span className="font-medium text-sm sm:text-base text-green-700 dark:text-green-400">Initial Payment:</span>
+                                        {/* Initial Payment Field - Hidden for Salesman */}
+                                        {!isSalesman && (
+                                            <div className="flex justify-between items-center py-2 border-b border-dashed bg-green-500/10 px-2 rounded">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="font-medium text-sm sm:text-base text-green-700 dark:text-green-400">Initial Payment:</span>
+                                                </div>
+                                                <div className="w-24 sm:w-32">
+                                                    <FormField
+                                                        control={form.control}
+                                                        name="initialPayment"
+                                                        render={({ field }) => (
+                                                            <FormItem className="space-y-0 text-right">
+                                                                <FormControl>
+                                                                    <Input
+                                                                        type="number"
+                                                                        step="0.01"
+                                                                        min="0"
+                                                                        {...field}
+                                                                        onChange={(e) => field.onChange(Number(e.target.value))}
+                                                                        className="text-right h-9 transition-all duration-300 focus:ring-2 focus:ring-green-500/50 bg-background border-green-500/30"
+                                                                        placeholder="0.00"
+                                                                    />
+                                                                </FormControl>
+                                                                <FormMessage />
+                                                            </FormItem>
+                                                        )}
+                                                    />
+                                                </div>
                                             </div>
-                                            <div className="w-24 sm:w-32">
-                                                <FormField
-                                                    control={form.control}
-                                                    name="initialPayment"
-                                                    render={({ field }) => (
-                                                        <FormItem className="space-y-0 text-right">
-                                                            <FormControl>
-                                                                <Input
-                                                                    type="number"
-                                                                    step="0.01"
-                                                                    min="0"
-                                                                    {...field}
-                                                                    onChange={(e) => field.onChange(Number(e.target.value))}
-                                                                    className="text-right h-9 transition-all duration-300 focus:ring-2 focus:ring-green-500/50 bg-background border-green-500/30"
-                                                                    placeholder="0.00"
-                                                                />
-                                                            </FormControl>
-                                                            <FormMessage />
-                                                        </FormItem>
-                                                    )}
-                                                />
-                                            </div>
-                                        </div>
+                                        )}
 
                                         <div className="flex justify-between items-center pt-2 border-t">
                                             <span className="text-base sm:text-lg font-bold">Total Amount (Payable):</span>
@@ -786,6 +858,7 @@ export default function AddSalePage() {
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-        </Layout>
+            </Layout>
+        </ProtectedRoute>
     );
 }

@@ -16,6 +16,8 @@ const transactionRoutes = require('./routes/transactions');
 const reportRoutes = require('./routes/reports');
 const expenseRoutes = require('./routes/expenses');
 const bulkUploadRoutes = require('./routes/bulkUpload');
+const userRoutes = require('./routes/users');
+const salesRequestRoutes = require('./routes/salesRequests');
 
 // Import middleware
 const { authenticate } = require('./middleware/auth');
@@ -114,6 +116,8 @@ app.use('/api/transactions', transactionRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/expenses', expenseRoutes);
 app.use('/api/bulk-upload', bulkUploadRoutes);
+app.use('/api/users', userRoutes);
+app.use('/api/sales-requests', salesRequestRoutes);
 
 // Welcome route
 app.get('/', (req, res) => {

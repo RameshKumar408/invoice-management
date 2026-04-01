@@ -139,6 +139,14 @@ const transactionSchema = new mongoose.Schema({
   isPrinted: {
     type: Boolean,
     default: false
+  },
+  salesmanId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  salesmanName: {
+    type: String,
+    trim: true
   }
 }, {
   timestamps: true

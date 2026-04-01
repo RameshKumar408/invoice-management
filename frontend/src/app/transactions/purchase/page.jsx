@@ -16,6 +16,7 @@ import { Combobox } from '@/components/ui/combobox';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import {
+    Calendar,
     Plus,
     Trash2,
     Save,
@@ -30,12 +31,15 @@ import {
 import { api } from '@/lib/api';
 import { FadeIn, SlideIn, FormFieldAnimation, ScaleOnHover } from '@/components/animations';
 
+import { ProtectedRoute } from '@/components/ProtectedRoute';
+
 // Form validation schema
 const purchaseFormSchema = z.object({
     vendorId: z.string().min(1, 'Vendor is required'),
     paymentMethod: z.enum(['cash', 'credit', 'card'], {
         required_error: 'Payment method is required',
     }),
+    date: z.string().min(1, 'Date is required'),
     notes: z.string().optional(),
     products: z.array(z.object({
         productId: z.string().min(1, 'Product is required'),
@@ -58,6 +62,7 @@ export default function AddPurchasePage() {
         defaultValues: {
             vendorId: '',
             paymentMethod: 'cash',
+            date: new Date().toISOString().split('T')[0],
             notes: '',
             products: [{ productId: '', quantity: 1, price: 0, unitType: 'case' }],
         },
@@ -126,6 +131,7 @@ export default function AddPurchasePage() {
                 vendorId: data.vendorId,
                 products: data.products,
                 paymentMethod: data.paymentMethod,
+                date: data.date,
                 notes: data.notes,
                 subtotal: amounts.subtotal,
                 sgst: amounts.sgst,
@@ -152,95 +158,193 @@ export default function AddPurchasePage() {
     };
 
     return (
-        <Layout>
-            <div className="max-w-4xl mx-auto space-y-6">
-                {/* Header */}
-                <FadeIn delay={0.1}>
-                    <div className="flex items-center gap-4">
-                        <ScaleOnHover>
-                            <Button variant="outline" onClick={() => router.back()}>
-                                <ArrowLeft className="mr-2 h-4 w-4" />
-                                Back
-                            </Button>
-                        </ScaleOnHover>
-                        <div>
-                            <h1 className="text-3xl font-bold tracking-tight">Add Purchase Transaction</h1>
-                            <p className="text-muted-foreground">
-                                Record a new purchase transaction and update inventory
-                            </p>
+        <ProtectedRoute roles={['admin']}>
+            <Layout>
+                <div className="max-w-4xl mx-auto space-y-6">
+                    {/* Header */}
+                    <FadeIn delay={0.1}>
+                        <div className="flex items-center gap-4">
+                            <ScaleOnHover>
+                                <Button variant="outline" onClick={() => router.back()}>
+                                    <ArrowLeft className="mr-2 h-4 w-4" />
+                                    Back
+                                </Button>
+                            </ScaleOnHover>
+                            <div>
+                                <h1 className="text-3xl font-bold tracking-tight">Add Purchase Transaction</h1>
+                                <p className="text-muted-foreground">
+                                    Record a new purchase transaction and update inventory
+                                </p>
+                            </div>
                         </div>
-                    </div>
-                </FadeIn>
-
-                {error && (
-                    <FadeIn>
-                        <Alert variant="destructive">
-                            <AlertCircle className="h-4 w-4" />
-                            <AlertTitle>Error</AlertTitle>
-                            <AlertDescription>{error}</AlertDescription>
-                        </Alert>
                     </FadeIn>
-                )}
 
-                {success && (
-                    <FadeIn>
-                        <Alert className="border-green-200 bg-green-50 text-green-800">
-                            <AlertDescription>{success}</AlertDescription>
-                        </Alert>
-                    </FadeIn>
-                )}
+                    {error && (
+                        <FadeIn>
+                            <Alert variant="destructive">
+                                <AlertCircle className="h-4 w-4" />
+                                <AlertTitle>Error</AlertTitle>
+                                <AlertDescription>{error}</AlertDescription>
+                            </Alert>
+                        </FadeIn>
+                    )}
 
-                <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                        {/* Vendor & Payment Info */}
-                        <SlideIn direction="up" delay={0.2}>
-                            <Card>
-                                <CardHeader className="flex flex-row items-center justify-between space-y-0">
-                                    <div className="space-y-1.5">
-                                        <CardTitle className="flex items-center gap-2">
-                                            <User className="h-5 w-5" />
-                                            Vendor & Payment Information
-                                        </CardTitle>
-                                        <CardDescription>
+                    {success && (
+                        <FadeIn>
+                            <Alert className="border-green-200 bg-green-50 text-green-800">
+                                <AlertDescription>{success}</AlertDescription>
+                            </Alert>
+                        </FadeIn>
+                    )}
 
-                                            Select the vendor and payment details
-                                        </CardDescription>
-                                    </div>
+                    <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                            {/* Vendor & Payment Info */}
+                            <SlideIn direction="up" delay={0.2}>
+                                <Card>
+                                    <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                                        <div className="space-y-1.5">
+                                            <CardTitle className="flex items-center gap-2">
+                                                <User className="h-5 w-5" />
+                                                Vendor & Payment Information
+                                            </CardTitle>
+                                            <CardDescription>
 
-                                    <ScaleOnHover>
-                                        <Button
-                                            type="button"
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => router.push('/contacts/new')}
-                                        >
-                                            <Plus className="mr-2 h-4 w-4" />
-                                            Add Vendor
-                                        </Button>
-                                    </ScaleOnHover>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <div className="grid gap-6 md:grid-cols-2">
-                                        <FormFieldAnimation delay={0.3}>
+                                                Select the vendor and payment details
+                                            </CardDescription>
+                                        </div>
+
+                                        <ScaleOnHover>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                onClick={() => router.push('/contacts/new')}
+                                            >
+                                                <Plus className="mr-2 h-4 w-4" />
+                                                Add Vendor
+                                            </Button>
+                                        </ScaleOnHover>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <div className="grid gap-6 md:grid-cols-2">
+                                            <FormFieldAnimation delay={0.3}>
+                                                <FormField
+                                                    control={form.control}
+                                                    name="vendorId"
+                                                    render={({ field }) => (
+                                                        <FormItem className="flex flex-col">
+                                                            <FormLabel className="flex items-center gap-1">
+                                                                <User className="h-4 w-4" />
+                                                                Vendor *
+                                                            </FormLabel>
+                                                            <FormControl>
+                                                                <Combobox
+                                                                    options={vendors.map(v => ({
+                                                                        label: `${v.name} - ${v.phone}`,
+                                                                        value: v._id
+                                                                    }))}
+                                                                    value={field.value}
+                                                                    onValueChange={field.onChange}
+                                                                    placeholder="Select a vendor"
+                                                                    searchPlaceholder="Search vendor..."
+                                                                />
+                                                            </FormControl>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                            </FormFieldAnimation>
+
+                                            <FormFieldAnimation delay={0.4}>
+                                                <FormField
+                                                    control={form.control}
+                                                    name="date"
+                                                    render={({ field }) => (
+                                                        <FormItem>
+                                                            <FormLabel className="flex items-center gap-1">
+                                                                <Calendar className="h-4 w-4" />
+                                                                Transaction Date *
+                                                            </FormLabel>
+                                                            <FormControl>
+                                                                <div className="relative">
+                                                                    <Input
+                                                                        type="text"
+                                                                        placeholder="DD/MM/YYYY"
+                                                                        value={field.value ? field.value.split('-').reverse().join('/') : ''}
+                                                                        onChange={(e) => {
+                                                                            const val = e.target.value;
+                                                                            const parts = val.split('/');
+                                                                            if (parts.length === 3) {
+                                                                                const [d, m, y] = parts;
+                                                                                if (y.length === 4) {
+                                                                                    field.onChange(`${y}-${m.padStart(2, '0')}-${d.padStart(2, '0')}`);
+                                                                                }
+                                                                            }
+                                                                        }}
+                                                                        className="pr-10 transition-all duration-300 focus:scale-105"
+                                                                    />
+                                                                    <div className="absolute right-0 top-0 h-full w-10 flex items-center justify-center pointer-events-none">
+                                                                        <Calendar className="h-4 w-4 text-muted-foreground" />
+                                                                    </div>
+                                                                    <input
+                                                                        type="date"
+                                                                        value={field.value || ''}
+                                                                        onChange={(e) => field.onChange(e.target.value)}
+                                                                        className="absolute inset-0 opacity-0 cursor-pointer"
+                                                                    />
+                                                                </div>
+                                                            </FormControl>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                            </FormFieldAnimation>
+
+                                            <FormFieldAnimation delay={0.45}>
+                                                <FormField
+                                                    control={form.control}
+                                                    name="paymentMethod"
+                                                    render={({ field }) => (
+                                                        <FormItem>
+                                                            <FormLabel className="flex items-center gap-1">
+                                                                <CreditCard className="h-4 w-4" />
+                                                                Payment Method *
+                                                            </FormLabel>
+                                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                                <FormControl>
+                                                                    <SelectTrigger className="transition-all duration-300 focus:scale-105">
+                                                                        <SelectValue placeholder="Select payment method" />
+                                                                    </SelectTrigger>
+                                                                </FormControl>
+                                                                <SelectContent>
+                                                                    <SelectItem value="cash">Cash</SelectItem>
+                                                                    <SelectItem value="credit">Credit</SelectItem>
+                                                                    <SelectItem value="card">Card</SelectItem>
+                                                                </SelectContent>
+                                                            </Select>
+                                                            <FormMessage />
+                                                        </FormItem>
+                                                    )}
+                                                />
+                                            </FormFieldAnimation>
+                                        </div>
+
+                                        <FormFieldAnimation delay={0.5}>
                                             <FormField
                                                 control={form.control}
-                                                name="vendorId"
+                                                name="notes"
                                                 render={({ field }) => (
-                                                    <FormItem className="flex flex-col">
+                                                    <FormItem>
                                                         <FormLabel className="flex items-center gap-1">
-                                                            <User className="h-4 w-4" />
-                                                            Vendor *
+                                                            <FileText className="h-4 w-4" />
+                                                            Notes
                                                         </FormLabel>
                                                         <FormControl>
-                                                            <Combobox
-                                                                options={vendors.map(v => ({
-                                                                    label: `${v.name} - ${v.phone}`,
-                                                                    value: v._id
-                                                                }))}
-                                                                value={field.value}
-                                                                onValueChange={field.onChange}
-                                                                placeholder="Select a vendor"
-                                                                searchPlaceholder="Search vendor..."
+                                                            <Textarea
+                                                                placeholder="Additional notes about this purchase..."
+                                                                {...field}
+                                                                className="transition-all duration-300 focus:scale-105"
                                                             />
                                                         </FormControl>
                                                         <FormMessage />
@@ -248,304 +352,253 @@ export default function AddPurchasePage() {
                                                 )}
                                             />
                                         </FormFieldAnimation>
+                                    </CardContent>
+                                </Card>
+                            </SlideIn>
 
-                                        <FormFieldAnimation delay={0.4}>
-                                            <FormField
-                                                control={form.control}
-                                                name="paymentMethod"
-                                                render={({ field }) => (
-                                                    <FormItem>
-                                                        <FormLabel className="flex items-center gap-1">
-                                                            <CreditCard className="h-4 w-4" />
-                                                            Payment Method *
-                                                        </FormLabel>
-                                                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                                            <FormControl>
-                                                                <SelectTrigger className="transition-all duration-300 focus:scale-105">
-                                                                    <SelectValue placeholder="Select payment method" />
-                                                                </SelectTrigger>
-                                                            </FormControl>
-                                                            <SelectContent>
-                                                                <SelectItem value="cash">Cash</SelectItem>
-                                                                <SelectItem value="credit">Credit</SelectItem>
-                                                                <SelectItem value="card">Card</SelectItem>
-                                                            </SelectContent>
-                                                        </Select>
-                                                        <FormMessage />
-                                                    </FormItem>
-                                                )}
-                                            />
-                                        </FormFieldAnimation>
-                                    </div>
+                            {/* Products */}
+                            <SlideIn direction="up" delay={0.3}>
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <ShoppingCart className="h-5 w-5" />
+                                                <span>Products</span>
+                                            </div>
 
-                                    <FormFieldAnimation delay={0.5}>
-                                        <FormField
-                                            control={form.control}
-                                            name="notes"
-                                            render={({ field }) => (
-                                                <FormItem>
-                                                    <FormLabel className="flex items-center gap-1">
-                                                        <FileText className="h-4 w-4" />
-                                                        Notes
-                                                    </FormLabel>
-                                                    <FormControl>
-                                                        <Textarea
-                                                            placeholder="Additional notes about this purchase..."
-                                                            {...field}
-                                                            className="transition-all duration-300 focus:scale-105"
-                                                        />
-                                                    </FormControl>
-                                                    <FormMessage />
-                                                </FormItem>
-                                            )}
-                                        />
-                                    </FormFieldAnimation>
-                                </CardContent>
-                            </Card>
-                        </SlideIn>
+                                        </CardTitle>
+                                        <CardDescription>
+                                            Add products to this purchase transaction (inventory will be increased)
+                                        </CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        {fields.map((field, index) => {
+                                            const selectedProduct = products.find(
+                                                p => p._id === form.watch(`products.${index}.productId`)
+                                            );
 
-                        {/* Products */}
-                        <SlideIn direction="up" delay={0.3}>
-                            <Card>
-                                <CardHeader>
-                                    <CardTitle className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                            <ShoppingCart className="h-5 w-5" />
-                                            <span>Products</span>
-                                        </div>
-
-                                    </CardTitle>
-                                    <CardDescription>
-                                        Add products to this purchase transaction (inventory will be increased)
-                                    </CardDescription>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    {fields.map((field, index) => {
-                                        const selectedProduct = products.find(
-                                            p => p._id === form.watch(`products.${index}.productId`)
-                                        );
-
-                                        return (
-                                            <div key={field.id} className="grid gap-4 md:grid-cols-6 items-end p-4 border rounded-lg relative group transition-all duration-300 hover:shadow-md">
-                                                <FormField
-                                                    control={form.control}
-                                                    name={`products.${index}.productId`}
-                                                    render={({ field }) => (
-                                                        <FormItem className="flex flex-col">
-                                                            <FormLabel className="flex items-center gap-1">
-                                                                <Package className="h-4 w-4" />
-                                                                Product *
-                                                            </FormLabel>
-                                                            <FormControl>
-                                                                <Combobox
-                                                                    options={products.map(p => ({
-                                                                        label: `${p.name} - Current Stock: ${p.stock}`,
-                                                                        value: p._id
-                                                                    }))}
-                                                                    value={field.value}
-                                                                    onValueChange={(value) => {
-                                                                        field.onChange(value);
-                                                                        handleProductChange(index, value);
-                                                                    }}
-                                                                    placeholder="Select product"
-                                                                    searchPlaceholder="Search product..."
-                                                                />
-                                                            </FormControl>
-                                                            <FormMessage />
-                                                        </FormItem>
-                                                    )}
-                                                />
-
-                                                <FormField
-                                                    control={form.control}
-                                                    name={`products.${index}.unitType`}
-                                                    render={({ field }) => (
-                                                        <FormItem>
-                                                            <FormLabel>Type *</FormLabel>
-                                                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                            return (
+                                                <div key={field.id} className="grid gap-4 md:grid-cols-6 items-end p-4 border rounded-lg relative group transition-all duration-300 hover:shadow-md">
+                                                    <FormField
+                                                        control={form.control}
+                                                        name={`products.${index}.productId`}
+                                                        render={({ field }) => (
+                                                            <FormItem className="flex flex-col">
+                                                                <FormLabel className="flex items-center gap-1">
+                                                                    <Package className="h-4 w-4" />
+                                                                    Product *
+                                                                </FormLabel>
                                                                 <FormControl>
-                                                                    <SelectTrigger className="transition-all duration-300 focus:scale-105">
-                                                                        <SelectValue placeholder="Select type" />
-                                                                    </SelectTrigger>
+                                                                    <Combobox
+                                                                        options={products.map(p => ({
+                                                                            label: `${p.name} - Current Stock: ${p.stock}`,
+                                                                            value: p._id
+                                                                        }))}
+                                                                        value={field.value}
+                                                                        onValueChange={(value) => {
+                                                                            field.onChange(value);
+                                                                            handleProductChange(index, value);
+                                                                        }}
+                                                                        placeholder="Select product"
+                                                                        searchPlaceholder="Search product..."
+                                                                    />
                                                                 </FormControl>
-                                                                <SelectContent>
-                                                                    <SelectItem value="case">Case</SelectItem>
-                                                                    <SelectItem value="single">Single</SelectItem>
-                                                                </SelectContent>
-                                                            </Select>
-                                                            <FormMessage />
-                                                        </FormItem>
-                                                    )}
-                                                />
+                                                                <FormMessage />
+                                                            </FormItem>
+                                                        )}
+                                                    />
 
-                                                <FormField
-                                                    control={form.control}
-                                                    name={`products.${index}.quantity`}
-                                                    render={({ field }) => (
-                                                        <FormItem>
-                                                            <FormLabel>Quantity *</FormLabel>
-                                                            <FormControl>
-                                                                <Input
-                                                                    type="number"
-                                                                    min="1"
-                                                                    {...field}
-                                                                    onChange={(e) => field.onChange(Number(e.target.value))}
-                                                                    className="transition-all duration-300 focus:scale-105"
-                                                                />
-                                                            </FormControl>
-                                                            <FormMessage />
-                                                        </FormItem>
-                                                    )}
-                                                />
+                                                    <FormField
+                                                        control={form.control}
+                                                        name={`products.${index}.unitType`}
+                                                        render={({ field }) => (
+                                                            <FormItem>
+                                                                <FormLabel>Type *</FormLabel>
+                                                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                                                    <FormControl>
+                                                                        <SelectTrigger className="transition-all duration-300 focus:scale-105">
+                                                                            <SelectValue placeholder="Select type" />
+                                                                        </SelectTrigger>
+                                                                    </FormControl>
+                                                                    <SelectContent>
+                                                                        <SelectItem value="case">Case</SelectItem>
+                                                                        <SelectItem value="single">Single</SelectItem>
+                                                                    </SelectContent>
+                                                                </Select>
+                                                                <FormMessage />
+                                                            </FormItem>
+                                                        )}
+                                                    />
 
-                                                <FormField
-                                                    control={form.control}
-                                                    name={`products.${index}.price`}
-                                                    render={({ field }) => (
-                                                        <FormItem>
-                                                            <FormLabel>Unit Price *</FormLabel>
-                                                            <FormControl>
-                                                                <Input
-                                                                    type="number"
-                                                                    step="0.01"
-                                                                    min="0"
-                                                                    {...field}
-                                                                    onChange={(e) => field.onChange(Number(e.target.value))}
-                                                                    className="transition-all duration-300 focus:scale-105"
-                                                                />
-                                                            </FormControl>
-                                                            <FormMessage />
-                                                        </FormItem>
-                                                    )}
-                                                />
+                                                    <FormField
+                                                        control={form.control}
+                                                        name={`products.${index}.quantity`}
+                                                        render={({ field }) => (
+                                                            <FormItem>
+                                                                <FormLabel>Quantity *</FormLabel>
+                                                                <FormControl>
+                                                                    <Input
+                                                                        type="number"
+                                                                        min="1"
+                                                                        {...field}
+                                                                        onChange={(e) => field.onChange(Number(e.target.value))}
+                                                                        className="transition-all duration-300 focus:scale-105"
+                                                                    />
+                                                                </FormControl>
+                                                                <FormMessage />
+                                                            </FormItem>
+                                                        )}
+                                                    />
 
-                                                <div className="space-y-2">
-                                                    <Label>Total</Label>
-                                                    <div className="h-10 flex items-center px-3 py-2 border rounded-md bg-muted font-medium">
-                                                        RS {Number(form.watch(`products.${index}.quantity`) * form.watch(`products.${index}.price`)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                    <FormField
+                                                        control={form.control}
+                                                        name={`products.${index}.price`}
+                                                        render={({ field }) => (
+                                                            <FormItem>
+                                                                <FormLabel>Unit Price *</FormLabel>
+                                                                <FormControl>
+                                                                    <Input
+                                                                        type="number"
+                                                                        step="0.01"
+                                                                        min="0"
+                                                                        {...field}
+                                                                        onChange={(e) => field.onChange(Number(e.target.value))}
+                                                                        className="transition-all duration-300 focus:scale-105"
+                                                                    />
+                                                                </FormControl>
+                                                                <FormMessage />
+                                                            </FormItem>
+                                                        )}
+                                                    />
+
+                                                    <div className="space-y-2">
+                                                        <Label>Total</Label>
+                                                        <div className="h-10 flex items-center px-3 py-2 border rounded-md bg-muted font-medium">
+                                                            RS {Number(form.watch(`products.${index}.quantity`) * form.watch(`products.${index}.price`)).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="flex justify-end">
+                                                        <ScaleOnHover>
+                                                            <Button
+                                                                type="button"
+                                                                variant="destructive"
+                                                                size="icon"
+                                                                onClick={() => remove(index)}
+                                                                disabled={fields.length === 1}
+                                                                className="h-10 w-10 transition-all duration-300"
+                                                                title="Remove Product"
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        </ScaleOnHover>
                                                     </div>
                                                 </div>
+                                            );
+                                        })}
 
-                                                <div className="flex justify-end">
-                                                    <ScaleOnHover>
-                                                        <Button
-                                                            type="button"
-                                                            variant="destructive"
-                                                            size="icon"
-                                                            onClick={() => remove(index)}
-                                                            disabled={fields.length === 1}
-                                                            className="h-10 w-10 transition-all duration-300"
-                                                            title="Remove Product"
-                                                        >
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
-                                                    </ScaleOnHover>
+                                        {/* Stock Info */}
+                                        <SlideIn direction="up" delay={0.4}>
+                                            <div>
+                                                {/* <div className="flex items-center gap-2 mb-2">
+                                                    <Package className="h-4 w-4 text-blue-600" />
+                                                    <span className="text-sm font-semibold text-blue-800">Stock Update Information</span>
+                                                </div>
+                                                <p className="text-sm text-blue-700 mb-2">
+                                                    Purchasing these products will automatically increase your inventory stock levels.
+                                                </p> */}
+                                                <div className="space-y-1">
+                                                    {fields.map((_, index) => {
+                                                        const productId = form.watch(`products.${index}.productId`);
+                                                        const quantity = form.watch(`products.${index}.quantity`);
+                                                        const product = products.find(p => p._id === productId);
+
+                                                        if (product && quantity > 0) {
+                                                            return (
+                                                                <div key={index} className="text-xs text-blue-600 flex items-center gap-2">
+                                                                    <div className="w-1 h-1 bg-blue-400 rounded-full" />
+                                                                    {product.name}: <span className="font-bold">{product.stock}</span> → <span className="font-bold text-blue-700">{product.stock + quantity}</span> (+{quantity})
+                                                                </div>
+                                                            );
+                                                        }
+                                                        return null;
+                                                    })}
                                                 </div>
                                             </div>
-                                        );
-                                    })}
-
-                                    {/* Stock Info */}
-                                    <SlideIn direction="up" delay={0.4}>
-                                        <div>
-                                            {/* <div className="flex items-center gap-2 mb-2">
-                                                <Package className="h-4 w-4 text-blue-600" />
-                                                <span className="text-sm font-semibold text-blue-800">Stock Update Information</span>
+                                        </SlideIn>
+                                        <div className="flex justify-end">
+                                            <ScaleOnHover>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => append({ productId: '', quantity: 1, price: 0, unitType: 'case' })}
+                                                >
+                                                    <Plus className="mr-2 h-4 w-4" />
+                                                    Add Product
+                                                </Button>
+                                            </ScaleOnHover>
+                                        </div>
+                                        {/* Total Amount Section */}
+                                        <div className="border-t pt-4 space-y-2">
+                                            <div className="flex justify-between items-center text-muted-foreground">
+                                                <span>Subtotal:</span>
+                                                <span>RS {Number(calculateAmounts().subtotal).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                             </div>
-                                            <p className="text-sm text-blue-700 mb-2">
-                                                Purchasing these products will automatically increase your inventory stock levels.
-                                            </p> */}
-                                            <div className="space-y-1">
-                                                {fields.map((_, index) => {
-                                                    const productId = form.watch(`products.${index}.productId`);
-                                                    const quantity = form.watch(`products.${index}.quantity`);
-                                                    const product = products.find(p => p._id === productId);
-
-                                                    if (product && quantity > 0) {
-                                                        return (
-                                                            <div key={index} className="text-xs text-blue-600 flex items-center gap-2">
-                                                                <div className="w-1 h-1 bg-blue-400 rounded-full" />
-                                                                {product.name}: <span className="font-bold">{product.stock}</span> → <span className="font-bold text-blue-700">{product.stock + quantity}</span> (+{quantity})
-                                                            </div>
-                                                        );
-                                                    }
-                                                    return null;
-                                                })}
+                                            <div className="flex justify-between items-center text-muted-foreground">
+                                                <span>SGST </span>
+                                                <span>RS {Number(calculateAmounts().sgst).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center text-muted-foreground">
+                                                <span>CGST </span>
+                                                <span>RS {Number(calculateAmounts().cgst).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                            </div>
+                                            <div className="flex justify-between items-center pt-2 border-t">
+                                                <span className="text-lg font-bold">Total Amount:</span>
+                                                <span className="text-3xl font-bold text-red-600">
+                                                    RS {Number(calculateAmounts().total).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                </span>
                                             </div>
                                         </div>
-                                    </SlideIn>
-                                    <div className="flex justify-end">
-                                        <ScaleOnHover>
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => append({ productId: '', quantity: 1, price: 0, unitType: 'case' })}
-                                            >
-                                                <Plus className="mr-2 h-4 w-4" />
-                                                Add Product
-                                            </Button>
-                                        </ScaleOnHover>
-                                    </div>
-                                    {/* Total Amount Section */}
-                                    <div className="border-t pt-4 space-y-2">
-                                        <div className="flex justify-between items-center text-muted-foreground">
-                                            <span>Subtotal:</span>
-                                            <span>RS {Number(calculateAmounts().subtotal).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                        </div>
-                                        <div className="flex justify-between items-center text-muted-foreground">
-                                            <span>SGST </span>
-                                            <span>RS {Number(calculateAmounts().sgst).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                        </div>
-                                        <div className="flex justify-between items-center text-muted-foreground">
-                                            <span>CGST </span>
-                                            <span>RS {Number(calculateAmounts().cgst).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                                        </div>
-                                        <div className="flex justify-between items-center pt-2 border-t">
-                                            <span className="text-lg font-bold">Total Amount:</span>
-                                            <span className="text-3xl font-bold text-red-600">
-                                                RS {Number(calculateAmounts().total).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        </SlideIn>
+                                    </CardContent>
+                                </Card>
+                            </SlideIn>
 
-                        {/* Submit Button */}
-                        <FadeIn delay={0.5}>
-                            <div className="flex justify-end gap-4">
-                                <ScaleOnHover>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        onClick={() => router.back()}
-                                        className="w-32"
-                                    >
-                                        Cancel
-                                    </Button>
-                                </ScaleOnHover>
-                                <ScaleOnHover>
-                                    <Button type="submit" disabled={loading} className="w-48">
-                                        {loading ? (
-                                            <>
-                                                <div className="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
-                                                Recording Purchase...
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Save className="mr-2 h-4 w-4" />
-                                                Record Purchase
-                                            </>
-                                        )}
-                                    </Button>
-                                </ScaleOnHover>
-                            </div>
-                        </FadeIn>
-                    </form>
-                </Form>
-            </div>
-        </Layout>
+                            {/* Submit Button */}
+                            <FadeIn delay={0.5}>
+                                <div className="flex justify-end gap-4">
+                                    <ScaleOnHover>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={() => router.back()}
+                                            className="w-32"
+                                        >
+                                            Cancel
+                                        </Button>
+                                    </ScaleOnHover>
+                                    <ScaleOnHover>
+                                        <Button type="submit" disabled={loading} className="w-48">
+                                            {loading ? (
+                                                <>
+                                                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white"></div>
+                                                    Recording Purchase...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <Save className="mr-2 h-4 w-4" />
+                                                    Record Purchase
+                                                </>
+                                            )}
+                                        </Button>
+                                    </ScaleOnHover>
+                                </div>
+                            </FadeIn>
+                        </form>
+                    </Form>
+                </div>
+            </Layout>
+        </ProtectedRoute>
     );
 }
 

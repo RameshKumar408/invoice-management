@@ -4,10 +4,10 @@
   "description": "Next.js 15 frontend for Inventory & Billing Management System",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint --turbopack"
+    "lint": "next lint"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.3.0",
@@ -17,6 +17,7 @@
     "@radix-ui/react-popover": "^1.1.15",
     "@radix-ui/react-select": "^2.0.0",
     "@radix-ui/react-slot": "^1.0.2",
+    "@radix-ui/react-switch": "^1.2.6",
     "@radix-ui/react-tabs": "^1.0.4",
     "@radix-ui/react-toast": "^1.1.5",
     "@tsparticles/engine": "^3.9.1",

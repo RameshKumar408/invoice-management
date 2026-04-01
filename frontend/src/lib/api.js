@@ -260,6 +260,53 @@ class ApiClient {
         });
         return response.data;
     }
+
+    // User management methods
+    async getUsers(params) {
+        const response = await this.instance.get('/users', { params });
+        return response.data;
+    }
+
+    async createUser(data) {
+        const response = await this.instance.post('/users', data);
+        return response.data;
+    }
+
+    async updateUser(id, data) {
+        const response = await this.instance.put(`/users/${id}`, data);
+        return response.data;
+    }
+
+    async deleteUser(id) {
+        const response = await this.instance.delete(`/users/${id}`);
+        return response.data;
+    }
+
+    // Sales Request methods
+    async getSalesRequests(params) {
+        const response = await this.instance.get('/sales-requests', { params });
+        return response.data;
+    }
+
+    async createSalesRequest(data) {
+        const response = await this.instance.post('/sales-requests', data);
+        return response.data;
+    }
+
+    async updateSalesRequest(id, data) {
+        const response = await this.instance.put(`/sales-requests/${id}`, data);
+        return response.data;
+    }
+
+    async approveSalesRequest(id, data = {}) {
+        const response = await this.instance.post(`/sales-requests/${id}/approve`, data);
+        return response.data;
+    }
+
+    async rejectSalesRequest(id, data = {}) {
+        const response = await this.instance.post(`/sales-requests/${id}/reject`, data);
+        return response.data;
+    }
 }
 
 export const apiClient = new ApiClient();

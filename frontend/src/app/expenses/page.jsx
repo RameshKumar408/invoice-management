@@ -32,7 +32,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { api } from '@/lib/api';
-import { Plus, Search, Filter, Calendar, IndianRupee, Trash2, Info, ArrowLeftRight } from 'lucide-react';
+import { Plus, Search, Filter, Calendar, IndianRupee, Trash2, Info, ArrowLeftRight, User } from 'lucide-react';
 import { format } from 'date-fns';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -59,7 +59,10 @@ const expenseSchema = z.object({
 
 const denominations = ['500', '200', '100', '50', '20', '10', '1'];
 
+import { useAuth } from '@/contexts/AuthContext';
+
 export default function ExpensesPage() {
+    const { user: currentUser } = useAuth();
     const [expenses, setExpenses] = useState([]);
     const [loading, setLoading] = useState(true);
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -441,6 +444,7 @@ export default function ExpensesPage() {
                                             <TableHead>Date</TableHead>
                                             <TableHead>Title</TableHead>
                                             <TableHead>Amount</TableHead>
+                                            <TableHead>Staff</TableHead>
                                             <TableHead>Denominations</TableHead>
                                             <TableHead className="text-right">Actions</TableHead>
                                         </TableRow>
@@ -448,7 +452,7 @@ export default function ExpensesPage() {
                                     <TableBody>
                                         {loading ? (
                                             <TableRow>
-                                                <TableCell colSpan={5} className="h-24 text-center">
+                                                <TableCell colSpan={6} className="h-24 text-center">
                                                     <div className="flex items-center justify-center">
                                                         <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
                                                     </div>
@@ -456,7 +460,7 @@ export default function ExpensesPage() {
                                             </TableRow>
                                         ) : expenses.length === 0 ? (
                                             <TableRow>
-                                                <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                                                <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
                                                     No expenses found.
                                                 </TableCell>
                                             </TableRow>
@@ -474,6 +478,14 @@ export default function ExpensesPage() {
                                                     </TableCell>
                                                     <TableCell className="font-bold text-red-500">
                                                         {formatCurrency(expense.amount)}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="flex items-center text-sm">
+                                                            <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center text-[10px] text-primary font-bold mr-2">
+                                                                {expense.createdBy?.name?.charAt(0) || 'U'}
+                                                            </div>
+                                                            <span className="font-medium">{expense.createdBy?.name || 'Unknown'}</span>
+                                                        </div>
                                                     </TableCell>
                                                     <TableCell>
                                                         <Dialog>
